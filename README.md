@@ -54,7 +54,15 @@ python scripts/prepare_data.py                  # 기본값: 12,000 세포
 python scripts/prepare_data.py --n-cells 24000  # 다운샘플 없이 singlet 전체 (약 36 MB)
 ```
 
-GEO 원본은 `data/raw/` 에 내려받으며 git 에는 포함되지 않습니다.
+GEO 원본 파일도 `data/raw/` 에 함께 포함되어 있어, 네트워크 다운로드 없이 전처리 과정을
+그대로 재현할 수 있습니다. (스크립트는 파일이 이미 있으면 다운로드를 건너뜁니다)
+
+| 파일 | 내용 |
+|---|---|
+| `GSM2560248_2.1.mtx.gz`, `GSM2560248_barcodes.tsv.gz` | 대조군 count matrix / 바코드 |
+| `GSM2560249_2.2.mtx.gz`, `GSM2560249_barcodes.tsv.gz` | IFN-beta 자극군 count matrix / 바코드 |
+| `GSE96583_batch2.genes.tsv.gz` | 유전자 목록 (Ensembl ID + symbol) |
+| `GSE96583_batch2.total.tsne.df.tsv.gz` | 세포 주석 (공여자, 조건, 세포타입, demuxlet singlet/doublet 판정) |
 
 ## 저장소 구조
 
@@ -63,6 +71,7 @@ GEO 원본은 `data/raw/` 에 내려받으며 git 에는 포함되지 않습니�
   devcontainer.json     Codespace 정의 (이미지, 확장, 테마, 머신 사양)
   requirements.txt      설치되는 분석 패키지 목록
   post-create.sh        최초 생성 시 실행되는 설치 스크립트
+data/raw/               GEO 원본 파일 (mtx, barcodes, genes, 세포 주석)
 data/processed/         전처리된 실습용 h5ad
 notebooks/              실습 노트북
 scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크립트

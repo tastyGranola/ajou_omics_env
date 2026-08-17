@@ -1,0 +1,18 @@
+# 원본 GEO 다운로드본 (scripts/prepare_data.py 로 언제든 재생성 가능)
+data/raw/
+
+# 분석 중 생성되는 결과물
+results/
+figures/
+*.h5ad.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS / 편집기
+.DS_Store
+.vscode/settings.json

@@ -1,0 +1,38 @@
+{
+  "name": "ajou-omics-scrnaseq",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-renderers"
+      ],
+      "settings": {
+        "workbench.colorTheme": "Default Dark Modern",
+        "workbench.preferredDarkColorTheme": "Default Dark Modern",
+        "window.autoDetectColorScheme": false,
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.terminal.activateEnvInCurrentTerminal": true,
+        "jupyter.askForKernelRestart": false,
+        "notebook.output.textLineLimit": 60,
+        "files.autoSave": "afterDelay",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}

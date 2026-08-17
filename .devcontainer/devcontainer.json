@@ -11,6 +11,12 @@
     "memory": "8gb",
     "storage": "32gb"
   },
+  "secrets": {
+    "CLAUDE_CODE_OAUTH_TOKEN": {
+      "description": "Claude Code 인증 토큰. 설정해 두면 Codespace 안에서 별도 로그인 없이 claude 가 바로 인증됩니다. 로컬에서 `claude setup-token` 으로 발급받아 등록하세요.",
+      "documentationUrl": "https://docs.claude.com/en/docs/claude-code/setup"
+    }
+  },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {

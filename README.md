@@ -14,7 +14,24 @@ GitHub Codespaces 에서 클릭 몇 번으로 single-cell RNA-seq 분석 환경�
 
 VS Code 화면은 어두운 테마(Default Dark Modern)로 설정되어 있고,
 **Claude Code 확장**이 미리 설치되어 있어 사이드바에서 바로 사용할 수 있습니다.
-터미널에서 `claude` 명령으로도 실행됩니다. (최초 실행 시 Anthropic 계정 로그인이 필요합니다)
+터미널에서 `claude` 명령으로도 실행됩니다.
+
+### Claude Code 인증 (선택)
+
+Codespaces secret 에 `CLAUDE_CODE_OAUTH_TOKEN` 이 등록되어 있으면 **Codespace 안에서 별도 로그인
+없이 바로 인증**됩니다. 등록되어 있지 않으면 터미널에서 `claude` 를 실행해 평소처럼 로그인하면 됩니다.
+
+토큰 발급 및 등록 방법:
+
+1. 본인 PC 에서 `claude setup-token` 실행 → 발급된 토큰 복사 (Claude 구독 필요)
+2. GitHub **Settings ▸ Codespaces ▸ Codespaces secrets ▸ New secret**
+   - Name: `CLAUDE_CODE_OAUTH_TOKEN`
+   - Repository access: 이 저장소 선택
+3. 이미 열려 있는 Codespace 는 한 번 재시작해야 반영됩니다
+
+> 강의에서 여러 수강생에게 한 번에 적용하려면 조직(Organization) 설정의
+> **Codespaces secrets** 에 등록하고 이 저장소에 접근 권한을 주면 됩니다.
+> 토큰은 개인 인증 정보이므로 저장소 파일이나 노트북에 직접 넣지 마세요.
 
 ## 데이터
 

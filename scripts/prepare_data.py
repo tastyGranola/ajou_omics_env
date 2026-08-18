@@ -10,12 +10,15 @@
   3. 세포타입이 할당되지 않은 세포를 제거한다.
   4. (조건 x 세포타입) 층화 다운샘플로 실습에 적당한 크기로 줄인다.
   5. 3개 미만의 세포에서만 검출되는 유전자를 제거한다.
-  6. raw count 가 .X 에 그대로 담긴 h5ad 파일 하나로 저장한다.
-     (정규화 / HVG / 클러스터링은 실습에서 직접 수행할 부분이라 일부러 하지 않는다)
+  6. 원 저자의 세포타입 주석을 제거한 뒤, raw count 가 .X 에 그대로 담긴
+     h5ad 파일 하나로 저장한다.
+     (정규화 / HVG / 클러스터링 / 세포타입 주석은 실습에서 직접 수행할 부분이라
+      일부러 결과를 넣지 않는다)
 
 사용법
-    python scripts/prepare_data.py                  # 기본 12,000 세포
-    python scripts/prepare_data.py --n-cells 24000  # 다운샘플 없이 전체 singlet 수준
+    python scripts/prepare_data.py                    # 기본 12,000 세포, 세포타입 주석 제외
+    python scripts/prepare_data.py --n-cells 24000    # 다운샘플 없이 전체 singlet 수준
+    python scripts/prepare_data.py --with-cell-type   # 강사용: 세포타입 주석 포함본을 별도 파일로 저장
 """
 
 from __future__ import annotations
@@ -93,7 +96,7 @@ def read_matrix(mtx_path: Path, bc_path: Path, genes: pd.DataFrame, cond: str) -
     return adata
 
 
-def main(n_cells: int, seed: int) -> None:
+def main(n_cells: int, seed: int, with_cell_type: bool) -> None:
     paths = fetch_all()
 
     genes = pd.read_csv(paths["genes"], sep="\t", header=None, names=["gene_id", "symbol"])
@@ -155,41 +158,66 @@ def main(n_cells: int, seed: int) -> None:
     adata.obs["total_counts"] = counts_per_cell
     adata.obs["n_genes"] = genes_per_cell
 
-    # 이 데이터의 유전자 목록에는 미토콘드리아 유전자(MT-)가 포함되어 있지 않다.
-    # 값이 전부 0 인 가짜 QC 지표를 남기지 않도록, 존재할 때만 pct_counts_mt 를 만든다.
+    # 이 데이터는 유전자 목록에 MT- 유전자가 있긴 하지만 count 가 전부 0 이다
+    # (원 저자가 미토콘드리아 리드를 제외했다). 값이 전부 0 인 가짜 QC 지표를 남기지 않도록,
+    # 실제로 미토콘드리아 count 가 잡힐 때만 pct_counts_mt 를 만든다.
     mt = adata.var["symbol"].astype(str).str.upper().str.startswith("MT-").values
-    if mt.any():
-        mt_counts = np.asarray(adata[:, mt].X.sum(axis=1)).ravel()
+    mt_counts = (
+        np.asarray(adata[:, mt].X.sum(axis=1)).ravel() if mt.any() else np.zeros(adata.n_obs)
+    )
+    if mt_counts.sum() > 0:
         adata.obs["pct_counts_mt"] = np.where(
             counts_per_cell > 0, mt_counts / counts_per_cell * 100, 0
         )
         adata.var["mt"] = mt
     else:
-        print("      ⚠ MT- 유전자가 레퍼런스에 없어 pct_counts_mt 는 만들지 않습니다")
+        print(
+            f"      ⚠ MT- 유전자 {int(mt.sum())}개의 count 가 모두 0 이라 "
+            "pct_counts_mt 는 만들지 않습니다"
+        )
 
     cells_per_gene = np.asarray((adata.X > 0).sum(axis=0)).ravel()
     adata = adata[:, cells_per_gene >= 3].copy()
     print(f"      {adata.n_obs:,} 세포 x {adata.n_vars:,} 유전자")
 
-    for col in ["stim", "cell_type", "donor"]:
+    # 원 저자의 세포타입 주석은 여기까지(필터링·층화 다운샘플)만 쓰고 결과물에서는 뺀다.
+    # 세포타입 주석은 수강생이 클러스터링과 마커 유전자로 직접 붙일 부분이다.
+    summary = pd.crosstab(adata.obs["cell_type"], adata.obs["stim"])
+    if not with_cell_type:
+        adata.obs = adata.obs.drop(columns=["cell_type"])
+
+    keep_cols = ["stim", "donor"] + (["cell_type"] if with_cell_type else [])
+    for col in keep_cols:
         adata.obs[col] = adata.obs[col].astype("category")
     adata.obs = adata.obs.drop(columns=["barcode"])
     adata.uns["about"] = {
         "study": "Kang et al. 2018, Nat Biotechnol (GSE96583, batch2)",
         "design": "PBMC, control vs IFN-beta stimulated, 8 lupus donors",
-        "processing": "demuxlet doublet/ambiguous removed; stratified downsample; raw counts in .X",
+        "processing": (
+            "demuxlet doublet/ambiguous removed; stratified downsample; raw counts in .X; "
+            + ("original cell type annotation included (instructor copy)" if with_cell_type
+               else "original cell type annotation intentionally withheld")
+        ),
     }
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    print(f"[6/6] 저장: {OUT.relative_to(ROOT)}")
-    adata.write_h5ad(OUT, compression="gzip")
-    print(f"      파일 크기: {OUT.stat().st_size / 1e6:.1f} MB")
-    print(pd.crosstab(adata.obs["cell_type"], adata.obs["stim"]))
+    out = OUT if not with_cell_type else OUT.with_name(OUT.stem + "_with_celltype.h5ad")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    print(f"[6/6] 저장: {out.relative_to(ROOT)}")
+    adata.write_h5ad(out, compression="gzip")
+    print(f"      파일 크기: {out.stat().st_size / 1e6:.1f} MB")
+    print(f"      obs 컬럼: {list(adata.obs.columns)}")
+    print("\n[참고] 원 저자 주석 기준 구성 (결과 파일에는 포함되지 않음)")
+    print(summary)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--n-cells", type=int, default=12000, help="다운샘플 목표 세포 수")
     parser.add_argument("--seed", type=int, default=0, help="난수 시드")
+    parser.add_argument(
+        "--with-cell-type",
+        action="store_true",
+        help="원 저자의 세포타입 주석을 포함한 강사용 파일을 별도로 저장한다",
+    )
     args = parser.parse_args()
-    main(args.n_cells, args.seed)
+    main(args.n_cells, args.seed, args.with_cell_type)

@@ -1,6 +1,9 @@
 # data/raw/ 의 GEO 원본은 저장소에 함께 포함한다
 # (수강생이 GEO 다운로드 없이 전처리 과정까지 재현할 수 있도록)
 
+# 강사용 세포 타입 주석 포함본 (prepare_data.py --with-cell-type)
+data/processed/*_with_celltype.h5ad
+
 # 분석 중 생성되는 결과물
 results/
 figures/

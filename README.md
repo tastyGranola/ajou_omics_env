@@ -35,24 +35,35 @@ VS Code 화면은 어두운 테마(Default Dark Modern)로 설정되어 있고,
 - (조건 × 세포타입) 층화 다운샘플로 약 12,000 세포까지 축소 — 무료 Codespace 사양에서도 원활히 동작
 - 3개 미만의 세포에서만 검출되는 유전자 제거
 
+**일부러 넣지 않은 것**
+
+- **세포 타입 주석** — 원 논문 저자들이 붙여 둔 세포 타입 라벨은 결과 파일에서 제외했습니다.
+  클러스터링과 마커 유전자로 직접 주석을 붙이는 것이 실습의 핵심 과정이기 때문입니다.
+  (층화 다운샘플 단계에서 세포 타입 구성 비율을 맞추는 데에만 내부적으로 사용했습니다)
+- 정규화, HVG 선별, 배치 통합, 차원축소, 클러스터링 결과
+
 **`obs` 컬럼**
 
 | 컬럼 | 설명 |
 |---|---|
 | `stim` | `ctrl` (대조군) / `stim` (IFN-beta 자극) |
-| `cell_type` | 원 논문의 세포 타입 주석 (B cells, CD14+ Monocytes, CD4 T cells, …) |
 | `donor` | 공여자 ID (demuxlet 판별 결과) |
 | `total_counts`, `n_genes` | 기본 QC 지표 |
 
-> 참고 — 이 데이터의 유전자 목록에는 미토콘드리아 유전자(`MT-`)가 포함되어 있지 않습니다.
-> 따라서 미토콘드리아 비율 기반 QC 는 적용할 수 없고, `total_counts` 와 `n_genes` 로 QC 를 진행합니다.
+> 참고 — 이 데이터는 유전자 목록에 미토콘드리아 유전자(`MT-`) 13개가 있지만 count 가 전부 0 입니다
+> (원 저자가 미토콘드리아 리드를 제외함). 따라서 미토콘드리아 비율 기반 QC 는 적용할 수 없고,
+> `total_counts` 와 `n_genes` 로 QC 를 진행합니다.
 
 ### 데이터 재생성
 
 ```bash
-python scripts/prepare_data.py                  # 기본값: 12,000 세포
-python scripts/prepare_data.py --n-cells 24000  # 다운샘플 없이 singlet 전체 (약 36 MB)
+python scripts/prepare_data.py                   # 기본값: 12,000 세포, 세포 타입 주석 제외
+python scripts/prepare_data.py --n-cells 24000   # 다운샘플 없이 singlet 전체 (약 36 MB)
+python scripts/prepare_data.py --with-cell-type  # 강사용: 원 저자 세포 타입 주석 포함본
 ```
+
+`--with-cell-type` 은 `gse96583_ifnb_with_celltype.h5ad` 로 따로 저장되며 git 에 포함되지
+않습니다. 수강생 주석 결과를 원 논문과 비교할 때 사용하세요.
 
 GEO 원본 파일도 `data/raw/` 에 함께 포함되어 있어, 네트워크 다운로드 없이 전처리 과정을
 그대로 재현할 수 있습니다. (스크립트는 파일이 이미 있으면 다운로드를 건너뜁니다)
@@ -62,7 +73,10 @@ GEO 원본 파일도 `data/raw/` 에 함께 포함되어 있어, 네트워크 �
 | `GSM2560248_2.1.mtx.gz`, `GSM2560248_barcodes.tsv.gz` | 대조군 count matrix / 바코드 |
 | `GSM2560249_2.2.mtx.gz`, `GSM2560249_barcodes.tsv.gz` | IFN-beta 자극군 count matrix / 바코드 |
 | `GSE96583_batch2.genes.tsv.gz` | 유전자 목록 (Ensembl ID + symbol) |
-| `GSE96583_batch2.total.tsne.df.tsv.gz` | 세포 주석 (공여자, 조건, 세포타입, demuxlet singlet/doublet 판정) |
+| `GSE96583_batch2.total.tsne.df.tsv.gz` | 세포 주석 (공여자, 조건, demuxlet singlet/doublet 판정, 원 저자 세포 타입) |
+
+> 이 주석 파일에는 원 저자의 세포 타입 라벨이 그대로 들어 있습니다 (GEO 원본이라 손대지 않았습니다).
+> 실습 중 정답을 미리 보지 않으려면 열어보지 마세요.
 
 ## 저장소 구조
 

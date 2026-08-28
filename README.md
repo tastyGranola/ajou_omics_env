@@ -127,6 +127,10 @@ bash parallel_lab/status.sh     # 두 실험 상태를 한 표로
 bash parallel_lab/cleanup.sh    # 정리
 ```
 
+공용 입력(`data/raw/`, `mcp_lab/`, `core_markers.xlsx` 등)은 복사하지 않고 main 을
+가리키는 심볼릭 링크로 걸립니다. 실험이 **만드는** 것(`scripts/`, `data/processed/`,
+`results/`, `figures/`)만 worktree 마다 따로 생깁니다 — worktree 하나당 약 17MB.
+
 `setup.sh` 는 이름을 주면 그대로 실험을 만듭니다. 시험해 보고 싶은 아이디어가
 셋이면 셋을 동시에 돌릴 수 있습니다.
 

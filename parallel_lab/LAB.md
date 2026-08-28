@@ -27,18 +27,41 @@
 
 ```
 /workspaces/ajou-omics-env/        ← main · 여기서 비교한다
-├── data/  scripts/  notebooks/
-├── comparison/                     ← 비교 결과가 여기 쌓인다
+├── data/raw/  mcp_lab/            공용 — 실험들이 나눠 쓴다
+├── comparison/                     비교 결과가 여기 쌓인다
 └── worktrees/
     ├── plan-execute/               ← 세션 A 가 사는 곳
-    │   ├── data/  results/  figures/
+    │   ├── data/raw/ → 공유         (심볼릭 링크)
+    │   ├── data/processed/          이 실험의 중간 데이터
+    │   ├── scripts/  results/  figures/
     │   └── EXPERIMENT.md
     └── stepwise-hitl/              ← 세션 B 가 사는 곳
-        ├── data/  results/  figures/
-        └── EXPERIMENT.md
+        └── (같은 구조 · 완전히 별개)
 ```
 
 **두 실험의 `results/` 는 서로 다른 디렉토리입니다.** 부딪히지 않습니다.
+
+### 나눠 쓰는 것과 따로 갖는 것
+
+`setup.sh` 는 저장소를 통째로 복사하지 않습니다. **실험이 만들지 않는 것은 공유**합니다.
+
+| | 무엇 | 왜 |
+|---|---|---|
+| **공유** (심볼릭 링크) | `data/raw/` · `mcp_lab/` · `parallel_lab/` · `.devcontainer/` · `core_markers.xlsx` | 실험이 읽기만 하는 공용 입력·도구. 복사하면 55MB 씩 늘어날 뿐입니다 |
+| **따로** (실물) | `scripts/` · `notebooks/` · `data/processed/` · `results/` · `figures/` · `EXPERIMENT.md` | 실험이 **만드는** 것. 섞이면 안 됩니다 |
+
+`data/processed/` 가 따로인 이유는 여기가 QC·정규화 중간 데이터가 쌓이는 곳이기 때문입니다.
+공유했다면 두 실험이 서로의 중간 파일을 덮어썼을 겁니다.
+
+worktree 하나가 17MB 입니다. 통째로 복사했다면 73MB 였습니다.
+
+```bash
+ls -l worktrees/plan-execute/data/raw/ | head -3     # → 화살표가 보입니다
+ls -l worktrees/plan-execute/data/processed/         # → 실물입니다
+```
+
+> **화살표(`→`)가 붙은 파일에는 쓰지 마세요.** main 과 옆 실험까지 같이 바뀝니다.
+> 읽기 전용 입력이라 실제로 쓸 일은 없습니다.
 
 ---
 
@@ -193,7 +216,7 @@ bash parallel_lab/setup.sh harmony-integration scvi-integration no-integration
 
 ### 오늘 남길 네 가지
 
-1. **worktree 하나 = 실험 하나.** 결과가 부딪히지 않으니 동시에 돌릴 수 있습니다
+1. **worktree 하나 = 실험 하나.** 공용 입력은 나눠 쓰고, 실험이 만드는 것만 갈라집니다
 2. **비교하려면 미리 약속해 둬야 합니다.** `results/summary/metrics.json` 이 그 약속입니다
 3. **결정을 기록해야 비교가 됩니다.** 결과만 놓고는 왜 갈렸는지 알 수 없습니다
 4. **자율 실행은 빠르고, 개입은 방향을 잡습니다.** 어느 한쪽이 정답이 아닙니다
@@ -221,6 +244,8 @@ bash parallel_lab/cleanup.sh --yes    # 실제로 지움
 | `fatal: '...' is already checked out` | 그 branch 를 이미 쓰는 worktree 가 있습니다. `git worktree list` |
 | worktree 안에서 Claude 가 다른 실험을 들여다본다 | `CLAUDE.md` 맨 아래 블록이 붙어 있는지 확인 |
 | worktree 안에 `data/` 가 없다 | 커밋 전에 만들어졌습니다. 지우고 `setup.sh` 다시 |
-| 디스크가 모자란다 | worktree 하나당 `data/` 73MB 가 복사됩니다. 실험 개수를 줄이세요 |
+| `data/raw/` 파일이 깨졌다 | 링크에 덮어썼습니다. `git checkout data/raw` 로 main 에서 복구 |
+| worktree 에서 `/mcp` 가 failed | 1교시에 만든 `mcp_lab/meeting.py` 를 커밋하지 않았습니다. main 에서 커밋하고 `setup.sh` 다시 |
+| 디스크가 모자란다 | worktree 하나당 17MB 입니다. 실험 개수를 줄이세요 |
 | 두 세션이 같은 파일을 고친다 | 있을 수 없습니다. 경로를 확인하세요 — 둘 다 `worktrees/` 밖에 있으면 잘못된 것입니다 |
 | 전부 되돌리고 싶다 | `bash parallel_lab/cleanup.sh --yes` |

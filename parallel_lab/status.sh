@@ -2,8 +2,19 @@
 # 병렬 실험들의 현재 상태를 한 화면에 보여준다.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# 항상 main 작업 트리를 기준으로 동작한다.
+# parallel_lab/ 은 각 worktree 에도 링크되어 있어서, 스크립트 위치로 루트를 잡으면
+# worktree 안에서 실행했을 때 자기 자신을 루트로 착각한다.
+ROOT="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
+if [ -z "$ROOT" ] || [ ! -d "$ROOT/.git" ]; then
+  echo "✗ git 저장소 안에서 실행하세요." >&2
+  exit 1
+fi
+HERE="$(pwd)"
 cd "$ROOT"
+if [ "$HERE" != "$ROOT" ] && [ "${HERE#$ROOT/worktrees/}" != "$HERE" ]; then
+  echo "· 실험 worktree 안에서 실행했습니다 — main($ROOT) 기준으로 동작합니다"
+fi
 
 if [ ! -d worktrees ]; then
   echo "worktrees/ 가 없습니다. 먼저 bash parallel_lab/setup.sh 를 실행하세요."

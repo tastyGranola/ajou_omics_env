@@ -11,7 +11,18 @@
     "memory": "8gb",
     "storage": "32gb"
   },
+  "secrets": {
+    "ANTHROPIC_API_KEY": {
+      "description": "Anthropic Console에서 발급한 API Key를 입력하세요. (Console 종량제 과금)",
+      "documentationUrl": "https://platform.claude.com/settings/keys"
+    },
+    "CLAUDE_CODE_OAUTH_TOKEN": {
+      "description": "API Key 대신 Pro/Max 구독으로 인증할 때 사용합니다. 로컬에서 `claude setup-token` 으로 발급받아 등록하세요. ANTHROPIC_API_KEY 가 없을 때만 사용됩니다.",
+      "documentationUrl": "https://code.claude.com/docs/en/authentication#generate-a-long-lived-token"
+    }
+  },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "waitFor": "postCreateCommand",
   "customizations": {
     "vscode": {
       "extensions": [

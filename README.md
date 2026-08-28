@@ -92,6 +92,10 @@ data/processed/         전처리된 실습용 h5ad
 notebooks/              실습 노트북
 scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크립트
 mcp_lab/                2일차 1교시 MCP 실습 (LAB.md 부터 보세요)
+parallel_lab/           2일차 2교시 병렬 실험 실습 (LAB.md 부터 보세요)
+worktrees/              병렬 실험용 worktree — setup.sh 가 만듭니다 (git 추적 안 함)
+comparison/             여러 실험을 비교한 결과
+CLAUDE.example.md       Claude Code 용 프로젝트 지침 — cp CLAUDE.example.md CLAUDE.md
 ```
 
 ## 2일차 1교시 — MCP 실습
@@ -104,6 +108,33 @@ python3 mcp_lab/verify.py     # 환경 점검 (Codespace 생성 시 이미 한 �
 
 안내서는 [mcp_lab/LAB.md](mcp_lab/LAB.md) 입니다.
 안 될 때는 `bash mcp_lab/doctor.sh` 로 진단합니다.
+
+## 2일차 2교시 — 병렬 실험 실습
+
+한 연구 질문을 두고 **서로 다른 진행 방식 두 가지를 동시에** 돌려 보고 비교합니다.
+`git worktree` 로 branch 마다 작업 폴더를 따로 만들어, 두 Claude 세션이 같은
+저장소에서 서로 부딪히지 않고 나란히 분석합니다.
+
+| | 실험 | branch | 진행 방식 |
+|---|---|---|---|
+| **A** | `plan-execute` | `exp/plan-execute` | 계획을 먼저 세우고 승인 후 끝까지 자율 실행 |
+| **B** | `stepwise-hitl` | `exp/stepwise-hitl` | 한 단계씩 가고 갈림길마다 사람에게 물음 |
+
+```bash
+git add -A && git commit -m "병렬 실험 출발점"
+bash parallel_lab/setup.sh      # worktrees/ 아래 실험 두 개 생성
+bash parallel_lab/status.sh     # 두 실험 상태를 한 표로
+bash parallel_lab/cleanup.sh    # 정리
+```
+
+`setup.sh` 는 이름을 주면 그대로 실험을 만듭니다. 시험해 보고 싶은 아이디어가
+셋이면 셋을 동시에 돌릴 수 있습니다.
+
+```bash
+bash parallel_lab/setup.sh harmony-integration scvi-integration no-integration
+```
+
+안내서는 [parallel_lab/LAB.md](parallel_lab/LAB.md) 입니다.
 
 ## 설치되는 주요 패키지
 

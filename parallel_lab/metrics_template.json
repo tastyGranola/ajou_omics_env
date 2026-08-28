@@ -1,0 +1,91 @@
+{
+  "experiment_id": "plan-execute",
+  "branch": "exp/plan-execute",
+  "goal": "IFN-beta 자극에 대한 PBMC 세포 타입별 반응 차이를 규명한다",
+  "approach": "전체 계획을 먼저 세우고 승인 후 끝까지 자율 실행",
+  "updated_at": "2026-08-28T14:20:00",
+  "stage": "deg",
+
+  "qc": {
+    "n_cells_before": 11998,
+    "n_cells_after": 11240,
+    "n_genes_after": 13022,
+    "filters": {
+      "min_genes_per_cell": 200,
+      "max_genes_per_cell": 2500,
+      "min_counts_per_cell": 500,
+      "min_cells_per_gene": 3
+    }
+  },
+
+  "preprocessing": {
+    "normalization": "normalize_total(1e4) + log1p",
+    "n_hvg": 2000,
+    "hvg_flavor": "seurat",
+    "scale_max_value": 10,
+    "n_pcs": 30,
+    "batch_correction": "harmony",
+    "batch_key": "stim"
+  },
+
+  "clustering": {
+    "method": "leiden",
+    "n_neighbors": 15,
+    "resolution": 0.5,
+    "n_clusters": 11
+  },
+
+  "annotation": {
+    "n_cell_types": 8,
+    "cell_types": [
+      {
+        "name": "CD14+ Monocytes",
+        "n_cells": 3120,
+        "clusters": [0, 3],
+        "markers": ["CD14", "LYZ", "S100A9"]
+      }
+    ],
+    "unassigned_clusters": [],
+    "validated_against_core_markers": false
+  },
+
+  "deg": {
+    "method": "wilcoxon",
+    "contrast": "stim vs ctrl",
+    "padj_cutoff": 0.05,
+    "lfc_cutoff": 0.5,
+    "per_cell_type": [
+      {
+        "cell_type": "CD14+ Monocytes",
+        "n_up": 214,
+        "n_down": 88,
+        "top_up": ["ISG15", "IFI6", "CXCL10"]
+      }
+    ]
+  },
+
+  "decisions": [
+    {
+      "step": "qc",
+      "question": "n_genes 상한을 둘 것인가",
+      "choice": "2500 으로 상한 설정",
+      "rationale": "분포 상위 꼬리가 doublet 잔여로 보였다",
+      "decided_by": "claude"
+    },
+    {
+      "step": "preprocessing",
+      "question": "stim/ctrl 을 batch 로 보정할 것인가",
+      "choice": "harmony 로 보정",
+      "rationale": "조건 효과와 배치 효과가 섞이는 위험을 감수하고 통합 클러스터링을 택했다",
+      "decided_by": "human"
+    }
+  ],
+
+  "artifacts": {
+    "figures": ["figures/qc/violin_qc.png", "figures/clustering/umap_leiden.png"],
+    "tables": ["results/deg/deg_per_celltype.csv"],
+    "report": "results/summary/report.html"
+  },
+
+  "notes": "자유 기술. 다른 실험과 비교할 때 알아야 할 특이사항."
+}

@@ -13,7 +13,8 @@ single_cell_project/
 │   ├── clustering/
 │   ├── annotation/
 │   ├── deg/
-│   └── condition_analysis/
+│   ├── condition_analysis/
+│   └── summary/
 │
 ├── figures/
 │   ├── qc/
@@ -22,6 +23,12 @@ single_cell_project/
 │   └── deg/
 │
 ├── config/
+│
+├── EXPERIMENT.md
+│
+├── worktrees/
+│
+├── comparison/
 │
 └── README.md
 
@@ -39,8 +46,12 @@ results/clustering/: 차원 축소, neighborhood graph, clustering 등 세포 �
 results/annotation/: marker 분석, cell-type annotation 및 annotation 검증 결과.
 results/deg/: differential expression 분석 결과.
 results/condition_analysis/: treatment, disease, stimulation 등 condition 간 비교 분석 결과.
+results/summary/: 이 작업 트리 전체의 요약 산출물. metrics.json과 report.html이 여기에 놓인다. 다른 실험과 비교할 때 읽는 위치이므로 파일명을 임의로 바꾸지 않는다.
 figures/: 분석 과정에서 생성한 주요 시각화. 필요한 경우 목적에 맞는 하위 디렉토리를 자유롭게 추가한다.
 config/: 분석 파라미터나 설정 파일이 필요한 경우 사용한다.
+EXPERIMENT.md: 이 작업 트리가 하나의 실험일 때만 존재한다. 실험의 아이디어, 진행 방식, 결정 로그를 담는다.
+worktrees/: 병렬 실험용 git worktree가 놓이는 자리. main 작업 트리에만 존재하며 git으로 추적하지 않는다.
+comparison/: 여러 실험을 비교한 결과. main 작업 트리에서만 생성한다.
 README.md: 데이터, 분석 목적, 주요 분석 과정과 결과를 설명한다.
 
 새로운 분석 단계가 필요하면 기존 구조에 억지로 맞추지 말고 적절한 디렉토리나 하위 디렉토리를 추가할 수 있다.
@@ -49,7 +60,7 @@ README.md: 데이터, 분석 목적, 주요 분석 과정과 결과를 설명한
 
 필요한 최소한의 파일만 생성하며, 단순히 디렉토리 구조를 채우기 위한 파일은 만들지 않는다.
 
-분석의 주요 단계가 완료되면 현재까지의 분석 과정, 핵심 결과, 주요 시각화, 해석 및 다음 분석 후보를 정리한 HTML report를 생성한다.
+분석의 주요 단계가 완료되면 현재까지의 분석 과정, 핵심 결과, 주요 시각화, 해석 및 다음 분석 후보를 정리한 HTML report를 results/summary/report.html로 생성한다.
 
 HTML report 생성 작업은 가능하면 메인 대화/작업 세션을 점유하지 않도록 별도의 background process로 실행한다. 사용자는 report가 생성되는 동안에도 같은 세션에서 추가 질문, 분석 수정, 후속 요청을 계속할 수 있어야 한다.
 
@@ -62,3 +73,34 @@ core_marker.xlsx는 celltype별 핵심 marker 목록을 담고 있는 참조 파
 skill을 작성하거나 분석 결과에 대한 근거를 설명할 때는 항상 한글로 작성한다.
 
 코드를 작성해야 할 때는 기본적으로 notebooks/에 새 노트북을 추가하지 말고 scripts/ 안에 script 파일로 작성한다. notebooks/는 탐색적 분석, 시각적 검토, 결과 해석 등 interactive한 용도로만 사용자가 명시적으로 요청했을 때 사용한다.
+
+
+## 병렬 실험 (git worktree)
+
+하나의 연구 목표에 대해 서로 다른 아이디어나 진행 방식을 동시에 시험하기 위해, 각 실험을 별도의 branch와 git worktree에서 독립적으로 수행하고 마지막에 비교한다.
+
+### 지금 어느 작업 트리에 있는지 먼저 판단한다
+
+저장소 루트에 EXPERIMENT.md가 있으면 이 작업 트리는 **실험 작업 트리**다. 없으면 **main 작업 트리**다. 세션을 시작할 때 이것을 먼저 확인하고, 아래의 해당 규칙을 따른다.
+
+### 실험 작업 트리에서 지키는 것
+
+작업 범위는 이 작업 트리 안으로 제한한다. 다른 실험의 디렉토리를 읽거나 쓰지 않고, worktrees/나 comparison/을 만들지 않는다. 다른 실험이 무엇을 하고 있는지 궁금하더라도 들여다보지 않는다. 실험 사이의 독립성이 비교의 전제다.
+
+branch를 옮기거나(checkout, switch) merge, rebase, 다른 worktree 제거를 하지 않는다. 사용자가 명시적으로 지시할 때만 한다.
+
+EXPERIMENT.md의 결정 로그를 계속 갱신한다. 분석 과정에서 판단이 갈리는 지점(필터링 기준, 정규화 방식, batch 보정 여부, clustering resolution, marker 선택, 통계 방법 등)을 만날 때마다 무엇을 골랐는지, 왜 골랐는지, 그리고 그 선택을 누가 했는지(claude / human)를 기록한다.
+
+주요 단계가 끝날 때마다 results/summary/metrics.json을 갱신한다. 이 파일은 실험 사이를 비교하기 위한 공통 산출물이므로 정해진 키 이름을 바꾸지 않는다. 필요한 항목은 추가할 수 있지만 기존 키를 삭제하거나 이름을 바꾸지 않는다. 형식은 parallel_lab/metrics_template.json을 따른다.
+
+같은 목표를 다루더라도 다른 실험의 결과에 맞추려 하지 않는다. 결과가 갈리는 것 자체가 관찰 대상이다.
+
+### main 작업 트리에서 지키는 것
+
+main에서는 분석을 직접 실행하지 않는다. worktrees/ 아래 각 실험의 EXPERIMENT.md, results/summary/metrics.json, results/, figures/를 읽어 비교하는 일만 한다.
+
+비교 결과는 comparison/에 쓴다. 각 실험 작업 트리의 파일은 수정하지 않는다.
+
+비교할 때는 결과만 보지 않는다. 어떤 결정이 결과의 차이를 만들었는지, 그 결정을 누가 했는지(claude / human), 두 실험이 갈라진 지점이 어디인지를 함께 정리한다. 결론을 내리기 어려운 항목은 "어느 쪽이 옳은지 이 데이터로는 판단할 수 없다"고 명시한다.
+
+비교 리포트는 comparison/comparison_report.html로 생성하고, 같은 내용의 요약을 comparison/comparison.md에도 남긴다.

@@ -32,6 +32,7 @@ parallel_lab/
 ├── LAB.md                  수강생 안내서
 ├── INSTRUCTOR.md           이 파일
 ├── setup.sh                worktree + branch + CLAUDE.md + EXPERIMENT.md 생성
+├── link_shared.py          공용 경로를 복사 대신 심볼릭 링크로 (setup.sh 가 부름)
 ├── status.sh               두 실험 상태를 한 표로
 ├── cleanup.sh              worktree/branch 제거 (comparison/ 은 남김)
 ├── metrics_template.json   비교를 가능하게 하는 공통 스키마
@@ -58,6 +59,35 @@ A 는 `claude`, B 는 `human` 이 대부분입니다. 같은 데이터·같은 �
 `CLAUDE.md` 에 "다른 worktree 를 읽지 않는다 · branch 를 옮기지 않는다" 를 넣었습니다.
 안 넣으면 B 가 A 의 결과를 참고해서 수렴해 버리고, 비교할 것이 없어집니다.
 
+**(4) 공용 입력은 나눠 쓰고, 실험이 만드는 것만 가른다.**
+`setup.sh` 는 저장소를 통째로 복사하지 않습니다. `data/raw/` `mcp_lab/` `parallel_lab/`
+`.devcontainer/` `core_markers.xlsx` 는 **main 을 가리키는 심볼릭 링크**로 걸립니다.
+worktree 하나가 73MB → **17MB** 가 됩니다.
+
+`data/processed/` 는 **일부러 공유하지 않습니다.** `CLAUDE.md` 상 QC·정규화 중간 데이터가
+쌓이는 곳이라, 공유하면 두 실험이 서로의 중간 파일을 덮어씁니다. 여기가 이 설계의
+유일한 판단 지점이니 질문이 나오면 이걸로 답하세요.
+
+수강생에게 보여줄 한 줄:
+
+```bash
+ls -l worktrees/plan-execute/data/raw/ worktrees/plan-execute/data/processed/
+```
+
+**화살표가 붙은 것은 공용, 실물인 것은 이 실험 것.** 파일 목록만 봐도 구분됩니다.
+
+### 구현 — 물어보면
+
+`git worktree add --no-checkout` → `read-tree` (index 만) → 공용 경로에 `--skip-worktree`
+→ `checkout-index -a` (나머지만 실제로 꺼냄) → 파일 단위 상대 심볼릭 링크.
+
+디렉토리째 링크하지 않고 **파일 단위**로 거는 이유는, 디렉토리를 링크하면 git 이 그것을
+untracked 로 보고 `git status` 에 남기 때문입니다. 지금은 `git status` 가 `?? EXPERIMENT.md`
+하나만 나옵니다 — 그래서 "이 실험이 만든 것" 이 한눈에 보입니다.
+
+**`git worktree remove` 는 심볼릭 링크를 따라가지 않습니다** (확인함). 실험을 지워도
+공용 데이터는 그대로입니다.
+
 ## 5. 예상 결과 — 미리 알고 계셔야 할 것
 
 수치는 매번 달라집니다. **갈리는 자리**가 거의 고정입니다.
@@ -79,7 +109,7 @@ A 는 `claude`, B 는 `human` 이 대부분입니다. 같은 데이터·같은 �
 
 | | |
 |---|---|
-| 디스크 | worktree 하나당 `data/` 73MB 가 복사됩니다. 기본 2개 = +146MB (32GB 중) |
+| 디스크 | worktree 하나당 17MB (`data/processed/` 18MB 만 실물). 기본 2개 = +34MB |
 | 메모리 | **8GB 에서 scanpy 세션 두 개가 동시에 돕니다.** 여기가 유일한 병목입니다 |
 | 세션 | A 실행 · B 대화 · C 비교 — 터미널 3개 |
 
@@ -91,6 +121,9 @@ A 는 `claude`, B 는 `human` 이 대부분입니다. 같은 데이터·같은 �
 git status                       # 깨끗해야 함
 bash parallel_lab/setup.sh
 ls worktrees/plan-execute        # data/ CLAUDE.md EXPERIMENT.md .mcp.json
+find worktrees/plan-execute -type l | wc -l     # 공용 링크 33개
+git -C worktrees/plan-execute status --short    # ?? EXPERIMENT.md 하나만
+du -sh worktrees/plan-execute    # 17M 안팎
 tail -20 worktrees/plan-execute/CLAUDE.md      # 진행 방식 블록이 붙었는지
 tail -20 worktrees/stepwise-hitl/CLAUDE.md     # 다른 내용인지
 bash parallel_lab/status.sh      # 표가 "-" 로라도 뜨는지

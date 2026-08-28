@@ -87,6 +87,10 @@ skill을 작성하거나 분석 결과에 대한 근거를 설명할 때는 항�
 
 작업 범위는 이 작업 트리 안으로 제한한다. 다른 실험의 디렉토리를 읽거나 쓰지 않고, worktrees/나 comparison/을 만들지 않는다. 다른 실험이 무엇을 하고 있는지 궁금하더라도 들여다보지 않는다. 실험 사이의 독립성이 비교의 전제다.
 
+이 작업 트리 안에서 심볼릭 링크로 걸린 경로는 main과 공유되는 공용 파일이다. data/raw/, mcp_lab/, parallel_lab/, .devcontainer/, core_markers.xlsx가 여기에 해당한다. 읽기만 하고 쓰거나 지우거나 이름을 바꾸지 않는다. 링크를 통해 쓰면 main과 다른 실험의 파일까지 함께 바뀐다. 어떤 경로가 링크인지 확실하지 않으면 ls -l로 확인한다.
+
+data/processed/는 공유하지 않는다. 이 작업 트리만의 실물 디렉토리이므로 분석 중간 데이터는 평소대로 여기에 쓴다.
+
 branch를 옮기거나(checkout, switch) merge, rebase, 다른 worktree 제거를 하지 않는다. 사용자가 명시적으로 지시할 때만 한다.
 
 EXPERIMENT.md의 결정 로그를 계속 갱신한다. 분석 과정에서 판단이 갈리는 지점(필터링 기준, 정규화 방식, batch 보정 여부, clustering resolution, marker 선택, 통계 방법 등)을 만날 때마다 무엇을 골랐는지, 왜 골랐는지, 그리고 그 선택을 누가 했는지(claude / human)를 기록한다.

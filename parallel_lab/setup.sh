@@ -8,8 +8,24 @@
 #   --ignore-dirty   커밋되지 않은 변경이 있어도 진행한다
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# 항상 main 작업 트리를 기준으로 동작한다.
+# parallel_lab/ 은 각 worktree 에도 링크되어 있어서, 스크립트 위치로 루트를 잡으면
+# worktree 안에서 실행했을 때 자기 자신을 루트로 착각한다.
+ROOT="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
+if [ -z "$ROOT" ] || [ ! -d "$ROOT/.git" ]; then
+  echo "✗ git 저장소 안에서 실행하세요." >&2
+  exit 1
+fi
+HERE="$(pwd)"
 cd "$ROOT"
+if [ "$HERE" != "$ROOT" ] && [ "${HERE#$ROOT/worktrees/}" != "$HERE" ]; then
+  echo "· 실험 worktree 안에서 실행했습니다 — main($ROOT) 기준으로 동작합니다"
+fi
+
+# main 과 공유할 것 — 실험이 만들지 않고 읽기만 하는 공용 입력·도구.
+# 이 경로들은 복사하지 않고 main 을 가리키는 심볼릭 링크로 건다.
+# data/processed/ 는 분석 중간 데이터가 쌓이는 곳이라 공유하지 않는다 (실험마다 따로).
+SHARED=(data/raw mcp_lab parallel_lab .devcontainer core_markers.xlsx)
 
 IGNORE_DIRTY=0
 NAMES=()
@@ -107,16 +123,26 @@ for NAME in "${NAMES[@]}"; do
   fi
 
   if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
-    if ! OUT="$(git worktree add "$DIR" "$BRANCH" 2>&1)"; then
+    if ! OUT="$(git worktree add --no-checkout "$DIR" "$BRANCH" 2>&1)"; then
       echo "$OUT" >&2; exit 1
     fi
-    echo "✓ $DIR   (기존 branch $BRANCH 재사용)"
+    NOTE="기존 branch $BRANCH 재사용"
   else
-    if ! OUT="$(git worktree add -b "$BRANCH" "$DIR" "$BASE" 2>&1)"; then
+    if ! OUT="$(git worktree add --no-checkout -b "$BRANCH" "$DIR" "$BASE" 2>&1)"; then
       echo "$OUT" >&2; exit 1
     fi
-    echo "✓ $DIR   (branch $BRANCH ← $BASE)"
+    NOTE="branch $BRANCH ← $BASE"
   fi
+
+  # 공유할 경로는 체크아웃하지 않고 main 을 가리키는 심볼릭 링크로 건다.
+  #   read-tree        index 만 채운다 (파일은 아직 안 쓴다)
+  #   skip-worktree    공유 경로를 "작업 트리에서 신경 쓰지 마라" 로 표시
+  #   checkout-index   나머지만 실제로 꺼낸다
+  git -C "$DIR" read-tree HEAD
+  python3 "$ROOT/parallel_lab/link_shared.py" "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
+  git -C "$DIR" checkout-index -a
+  python3 "$ROOT/parallel_lab/link_shared.py" --link "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
+  echo "✓ $DIR   ($NOTE)"
 
   # CLAUDE.md — 공통 지침 + 이 실험의 진행 방식
   if [ -f CLAUDE.md ]; then

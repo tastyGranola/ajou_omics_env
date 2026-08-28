@@ -12,6 +12,7 @@ figures/
 # Python
 __pycache__/
 *.py[cod]
+*.bak
 .venv/
 venv/
 .ipynb_checkpoints/

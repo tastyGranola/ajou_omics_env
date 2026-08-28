@@ -2,28 +2,54 @@
 # Codespace 가 처음 만들어질 때 한 번 실행됩니다.
 set -euo pipefail
 
+# uv · uvx · claude 네이티브 인스톨러가 쓰는 경로.
+# 이 스크립트 안에서도 바로 부를 수 있도록 미리 얹는다.
+export PATH="$HOME/.local/bin:$PATH"
+
 echo "========================================"
 echo " Setting up workshop environment"
 echo "========================================"
 
 echo
-echo "[1/4] pip 업그레이드 & single-cell 분석 패키지 설치 (수 분 소요)"
+echo "[1/6] pip 업그레이드 & 분석·MCP 패키지 설치 (수 분 소요)"
 python -m pip install --upgrade pip
 pip install --no-cache-dir -r .devcontainer/requirements.txt
 
+# --------------------------------------------------
+# [2/6] MCP 서버 미리 받아두기
+# --------------------------------------------------
+# .devcontainer/tools.txt 에 적힌 서버를 uvx 환경에 미리 내려받는다.
+# 실습 ③에서 처음 부를 때 기다리지 않기 위한 것이므로, 실패해도 진행한다.
+# (uvx 는 실습 중에 필요하면 그때 다시 받는다)
 echo
-echo "[2/4] Jupyter 커널 등록"
+echo "[2/6] MCP 서버 미리 받아두기 (uvx)"
+
+if ! command -v uv >/dev/null 2>&1; then
+    echo "   ⚠ uv 를 찾지 못했습니다 — 실습 ③의 fetch 서버가 안 될 수 있습니다"
+elif [ ! -f .devcontainer/tools.txt ]; then
+    echo "   · .devcontainer/tools.txt 가 없어 건너뜁니다"
+else
+    if sed -e 's/#.*//' -e '/^[[:space:]]*$/d' .devcontainer/tools.txt \
+        | xargs -r -n1 uv tool install; then
+        uv tool list || true
+    else
+        echo "   ⚠ 일부 서버를 미리 받지 못했습니다 (실습 때 uvx 가 다시 시도합니다)"
+    fi
+fi
+
+echo
+echo "[3/6] Jupyter 커널 등록"
 python -m ipykernel install --user --name ajou-omics --display-name "Python (ajou-omics)"
 
 echo
-echo "[3/4] Claude Code CLI 설치"
+echo "[4/6] Claude Code CLI 설치"
 npm install -g @anthropic-ai/claude-code
 
 # --------------------------------------------------
-# [4/4] Claude Code 워크샵 설정
+# [5/6] Claude Code 워크샵 설정
 # --------------------------------------------------
 echo
-echo "[4/4] Claude Code 설정"
+echo "[5/6] Claude Code 설정"
 
 CLAUDE_SHELL_CONFIG="$HOME/.claude-workshop.sh"
 
@@ -170,6 +196,23 @@ import anndata, scanpy
 print(f"   scanpy {scanpy.__version__} / anndata {anndata.__version__}")
 PY
 
+
+# --------------------------------------------------
+# [6/6] MCP 실습 환경 점검
+# --------------------------------------------------
+# 저장소가 마운트된 뒤에만 할 수 있는 일이라 여기에 있다.
+# 점검일 뿐이므로 통과하지 못해도 Codespace 생성은 계속 진행한다.
+echo
+echo "[6/6] MCP 실습 환경 점검"
+
+if [ -f mcp_lab/verify.py ]; then
+    python3 mcp_lab/verify.py || \
+        echo "   ⚠ 준비되지 않은 항목이 있습니다 — 'bash mcp_lab/doctor.sh' 로 자세히 볼 수 있습니다"
+else
+    echo "   · mcp_lab/verify.py 가 없어 건너뜁니다"
+fi
+
+
 echo
 echo "========================================"
 echo " Setup complete!"
@@ -178,4 +221,6 @@ echo
 echo "새 터미널을 열고 다음을 실행하세요:"
 echo
 echo "    claude"
+echo
+echo "MCP 실습(2일차 1교시)은 mcp_lab/LAB.md 를 여세요."
 echo

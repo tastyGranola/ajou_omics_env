@@ -83,13 +83,27 @@ GEO 원본 파일도 `data/raw/` 에 함께 포함되어 있어, 네트워크 �
 ```
 .devcontainer/
   devcontainer.json     Codespace 정의 (이미지, 확장, 테마, 머신 사양)
-  requirements.txt      설치되는 분석 패키지 목록
-  post-create.sh        최초 생성 시 실행되는 설치 스크립트
+  requirements.txt      설치되는 분석 패키지 + MCP 패키지 목록
+  tools.txt             uvx 로 미리 받아둘 MCP 서버 목록
+  post-create.sh        최초 생성 시 실행되는 설치·점검 스크립트
+.mcp.json               MCP 서버 등록 파일 — 2일차 실습에서 직접 채웁니다
 data/raw/               GEO 원본 파일 (mtx, barcodes, genes, 세포 주석)
 data/processed/         전처리된 실습용 h5ad
 notebooks/              실습 노트북
 scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크립트
+mcp_lab/                2일차 1교시 MCP 실습 (LAB.md 부터 보세요)
 ```
+
+## 2일차 1교시 — MCP 실습
+
+같은 Codespace 에서 이어집니다. **새로 만들 것이 없습니다.**
+
+```bash
+python3 mcp_lab/verify.py     # 환경 점검 (Codespace 생성 시 이미 한 번 돕니다)
+```
+
+안내서는 [mcp_lab/LAB.md](mcp_lab/LAB.md) 입니다.
+안 될 때는 `bash mcp_lab/doctor.sh` 로 진단합니다.
 
 ## 설치되는 주요 패키지
 

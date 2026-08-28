@@ -38,3 +38,9 @@ jupyterlab>=4.2,<5
 ipykernel>=6.29,<7
 ipywidgets>=8.1,<9
 tqdm>=4.66,<5
+
+# --- MCP 실습 (2일차 1교시) ---
+# mcp 는 python3 가 가리키는 인터프리터에 깔려야 합니다.
+# (mcp_lab/server.py 를 띄우는 python3 와 같아야 하므로 'python -m pip' 로 설치)
+mcp[cli]>=2.0              # MCP 서버 SDK — mcp_lab/server.py, mcp_lab/meeting.py
+uv>=0.5                    # uvx — 남이 만든 MCP 서버를 격리 환경에서 실행

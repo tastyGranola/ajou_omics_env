@@ -22,9 +22,14 @@ scikit-misc>=0.3,<1        # scanpy 의 flavor="seurat_v3" HVG 계산에 필요
 harmonypy>=0.0.9,<0.1
 
 # --- 차등발현 / 경로 분석 (IFN-beta 반응 해석용) ---
-pydeseq2>=0.4,<1           # pseudobulk 기반 DE
-decoupler>=1.6,<2          # 경로/전사인자 활성 추정
+pydeseq2>=0.5,<1           # pseudobulk 기반 DE
+decoupler>=2.2,<3          # 경로/전사인자 활성 추정 (AUCell · GSEA · ULM · ORA)
 gseapy>=1.1,<2             # GSEA / over-representation
+
+# decoupler 는 2.0 에서 API 가 전면 개편되었습니다 (dc.run_ulm → dc.mt.ulm 등).
+# 실습 문서와 프롬프트는 2.x 기준으로 쓰여 있습니다 — functional_lab/CHEATSHEET.md 참고.
+# 이미 만들어 둔 Codespace 는 post-create 가 다시 돌지 않으므로 직접 올려야 합니다:
+#     pip install -U 'decoupler>=2.2,<3'
 
 # --- 세포 타입 주석 ---
 celltypist>=1.6,<2

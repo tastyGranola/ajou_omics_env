@@ -27,7 +27,8 @@
 
 ```
 /workspaces/ajou-omics-env/        ← main · 여기서 비교한다
-├── data/raw/  mcp_lab/            공용 — 실험들이 나눠 쓴다
+├── data/raw/  data/genesets/     공용 — 실험들이 나눠 쓴다
+├── mcp_lab/  parallel_lab/
 ├── comparison/                     비교 결과가 여기 쌓인다
 └── worktrees/
     ├── plan-execute/               ← 세션 A 가 사는 곳
@@ -47,7 +48,7 @@
 
 | | 무엇 | 왜 |
 |---|---|---|
-| **공유** (심볼릭 링크) | `data/raw/` · `mcp_lab/` · `parallel_lab/` · `.devcontainer/` · `.claude/agents/` · `core_markers.xlsx` | 실험이 읽기만 하는 공용 입력·도구. 복사하면 55MB 씩 늘어날 뿐입니다 |
+| **공유** (심볼릭 링크) | `data/raw/` · `data/genesets/` · `mcp_lab/` · `parallel_lab/` · `.devcontainer/` · `.claude/agents/` · `core_markers.xlsx` | 실험이 읽기만 하는 공용 입력·도구. 복사하면 55MB 씩 늘어날 뿐입니다 |
 | **따로** (실물) | `scripts/` · `notebooks/` · `data/processed/` · `results/` · `figures/` · `EXPERIMENT.md` | 실험이 **만드는** 것. 섞이면 안 됩니다 |
 
 `data/processed/` 가 따로인 이유는 여기가 QC·정규화 중간 데이터가 쌓이는 곳이기 때문입니다.
@@ -71,6 +72,13 @@ ls -l worktrees/plan-execute/data/processed/         # → 실물입니다
 
 ```bash
 git add -A && git commit -m "병렬 실험 출발점"
+```
+
+기능 분석에 쓸 gene set 이 캐시되어 있는지 확인합니다 (없으면 한 번 받습니다).
+
+```bash
+python3 parallel_lab/verify.py            # 패키지 · gene set 캐시 · 입력 데이터
+python3 parallel_lab/fetch_genesets.py    # 캐시가 비어 있을 때만
 ```
 
 ```bash
@@ -106,7 +114,13 @@ cd worktrees/plan-execute && claude
 
 여는 프롬프트는 [prompts/01_plan-execute.md](prompts/01_plan-execute.md) 에 있습니다. 붙여 넣으세요.
 
-계획이 나오면 읽고 승인합니다.
+프롬프트는 `Task` / `Objective` / `Dataset` / `Path` 머리말과 번호 붙은 단계 목록으로만
+되어 있습니다. **무엇을 원하는지만 적고 어떻게 할지는 적지 않습니다** — 파라미터 값과
+통계 방법은 Claude 가 정할 일이고, 그걸 다 적어 주면 LLM 을 쓸 이유가 없습니다.
+대신 **정한 것을 기록하게** 하고, 그 기록을 4번에서 비교합니다.
+
+계획이 나오면 읽고 승인합니다. 프롬프트가 방법을 지정하지 않았으니
+**계획서가 곧 Claude 의 방법 선택**입니다. 거기를 보는 것이 이 단계의 요점입니다.
 
 ```
 좋아. 이대로 진행해.
@@ -150,6 +164,51 @@ A 는 이 갈림길에서 혼자 결정했습니다. B 에서는 여러분이 �
 
 **두 실험이 여기서 갈릴 가능성이 가장 높습니다.**
 
+### ★ 7단계, 기능 분석 — 알아 둘 것 세 가지
+
+7단계는 DEG 목록을 경로·전사인자 수준의 문장으로 바꿉니다.
+프롬프트가 방법을 지정하지 않으니, 세 가지만 알고 지켜보면 됩니다.
+
+**(1) 입력이 셋이다.** 기능 분석은 방법이 수십 가지지만 입력은 항상 셋입니다 —
+**readout**(무엇을 점수 매기나) · **prior knowledge**(어느 유전자 집합) ·
+**method**(어느 통계). 셋 중 하나만 바꿔도 결과가 바뀌므로, 셋을 다 기록하지 않은
+기능 분석 결과는 재현할 수 없습니다.
+
+`data/genesets/` 에 네 자원이 캐시되어 있습니다. **gene set 은 "그 경로의 구성원"**,
+**footprint 는 "그 경로가 켜지면 변하는 유전자"** 입니다. 전사체에는 footprint 가 더
+직접적으로 대응합니다 — 인산화로 켜지는 경로는 구성원의 mRNA 가 안 변할 수도 있으니까요.
+
+| 자원 | 종류 | 집합 수 |
+|---|---|---|
+| Hallmark | gene set | 50 (중복 적음) |
+| Reactome | gene set | 2,105 (중복 심함) |
+| PROGENy | footprint | 14 (신호경로) |
+| CollecTRI | footprint | 1,185 (전사인자) |
+
+**(2) 조건을 비교하려면 pseudobulk 로 간다.** 세포 12,000개를 stim/ctrl 로 갈라 검정하면
+p 값이 천문학적으로 작아집니다 — 같은 도너의 세포를 독립 표본으로 취급하기 때문입니다.
+6단계에서 한계로만 적은 그 문제입니다.
+
+이 데이터에는 **도너가 8명, 조건마다 8명 전부** 있습니다. 세포 타입 안에서
+(도너 × 조건)으로 합치면 **8 대 8** 이 됩니다. 이게 진짜 반복입니다.
+6단계 DEG 개수와 7단계 pseudobulk DEG 개수를 나란히 놓으면 대개 자릿수가 다릅니다.
+
+**(3) 답의 일부가 미리 알려져 있다.** IFN-beta 를 넣었으니 인터페론 반응이 최상위여야 합니다.
+Hallmark 는 `INTERFERON_ALPHA_RESPONSE`, PROGENy 는 `JAK-STAT`, CollecTRI 는 `STAT1`.
+
+안 나오면 **앞 단계가 깨진 것입니다** — 배치 보정으로 조건 효과를 지웠거나,
+pseudobulk 에 log-normalized 값을 넣었거나, 유전자 이름이 안 맞은 것입니다.
+그리고 답을 안다는 것은 **지어낸 결과를 잡아낼 수 있다**는 뜻이기도 합니다.
+
+```
+상위 경로가 그 자리에 온 이유를 leading edge 유전자로 보여줘.
+그 유전자들의 실제 log2FC 와 검정 통계량도 같은 표에.
+```
+
+> **다만 양성 대조 통과가 나머지를 보증하지는 않습니다.** 1·2위는 어떤 자원·방법으로도
+> 인터페론이 나옵니다. 갈리는 곳은 3위 이하입니다 — 프롬프트 7.4 가 gene set 과 방법을
+> 각각 둘 이상 써서 **한 실험 안에서** 일치도를 재게 하는 이유입니다.
+
 ### 중간에 A 를 확인하고 싶으면
 
 세 번째 터미널에서:
@@ -188,6 +247,7 @@ cd /workspaces/ajou-omics-env && claude
 |---|---|
 | 같은 데이터인데 | 세포 수 · 클러스터 수 · 세포 타입 수가 다릅니다 |
 | 같은 질문인데 | DEG 개수와 상위 유전자가 다릅니다 |
+| 같은 자극인데 | 상위 경로 1·2위는 같고 3위 이하가 다릅니다 |
 | 어디서 갈렸나 | 대개 **QC 컷오프**와 **배치 보정 여부** 두 군데입니다 |
 | 누가 결정했나 | A 는 거의 전부 `claude`, B 는 절반 이상 `human` |
 

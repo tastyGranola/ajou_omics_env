@@ -26,7 +26,10 @@ fi
 # 이 경로들은 복사하지 않고 main 을 가리키는 심볼릭 링크로 건다.
 # data/processed/ 는 분석 중간 데이터가 쌓이는 곳이라 공유하지 않는다 (실험마다 따로).
 # .claude/agents/ 는 검증 에이전트다. 실험마다 다르면 검증 기준이 달라져 비교가 깨지므로 공유한다.
-SHARED=(data/raw mcp_lab parallel_lab .devcontainer .claude/agents core_markers.xlsx)
+# data/genesets/ 는 기능 분석의 prior knowledge 캐시다. 실험마다 다른 gene set 을 받으면
+#   "gene set 을 바꿨더니 결과가 달라졌다" 를 말할 수 없으므로 공유한다.
+#   ★ git 에 커밋되어 있어야 링크가 걸린다 (link_shared.py 가 git ls-files 를 쓴다).
+SHARED=(data/raw data/genesets mcp_lab parallel_lab .devcontainer .claude/agents core_markers.xlsx)
 
 IGNORE_DIRTY=0
 NAMES=()
@@ -196,6 +199,7 @@ for NAME in "${NAMES[@]}"; do
 - [ ] Clustering
 - [ ] Cell type annotation
 - [ ] 조건 간 차등발현
+- [ ] 조건 간 기능 분석 (GSEA · pathway)
 - [ ] \`results/summary/metrics.json\`
 - [ ] \`results/summary/report.html\`
 MD

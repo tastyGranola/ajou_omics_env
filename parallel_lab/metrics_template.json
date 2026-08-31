@@ -5,7 +5,6 @@
   "approach": "전체 계획을 먼저 세우고 승인 후 끝까지 자율 실행",
   "updated_at": "2026-08-28T14:20:00",
   "stage": "deg",
-
   "qc": {
     "n_cells_before": 11998,
     "n_cells_after": 11240,
@@ -17,7 +16,6 @@
       "min_cells_per_gene": 3
     }
   },
-
   "preprocessing": {
     "normalization": "normalize_total(1e4) + log1p",
     "n_hvg": 2000,
@@ -27,28 +25,32 @@
     "batch_correction": "harmony",
     "batch_key": "stim"
   },
-
   "clustering": {
     "method": "leiden",
     "n_neighbors": 15,
     "resolution": 0.5,
     "n_clusters": 11
   },
-
   "annotation": {
     "n_cell_types": 8,
     "cell_types": [
       {
         "name": "CD14+ Monocytes",
         "n_cells": 3120,
-        "clusters": [0, 3],
-        "markers": ["CD14", "LYZ", "S100A9"]
+        "clusters": [
+          0,
+          3
+        ],
+        "markers": [
+          "CD14",
+          "LYZ",
+          "S100A9"
+        ]
       }
     ],
     "unassigned_clusters": [],
     "validated_against_core_markers": false
   },
-
   "deg": {
     "method": "wilcoxon",
     "contrast": "stim vs ctrl",
@@ -59,11 +61,157 @@
         "cell_type": "CD14+ Monocytes",
         "n_up": 214,
         "n_down": 88,
-        "top_up": ["ISG15", "IFI6", "CXCL10"]
+        "top_up": [
+          "ISG15",
+          "IFI6",
+          "CXCL10"
+        ]
       }
     ]
   },
-
+  "functional": {
+    "readout": "pseudobulk contrast",
+    "_readout_설명": "cellwise | pseudobulk contrast | both — 어느 수준에서 점수를 냈는가",
+    "prior_knowledge": [
+      {
+        "name": "hallmark",
+        "kind": "gene set",
+        "source": "data/genesets/hallmark.csv.gz",
+        "n_sources_total": 50,
+        "n_sources_after_tmin": 50,
+        "tmin": 15,
+        "size_max_filter": null
+      },
+      {
+        "name": "progeny",
+        "kind": "footprint",
+        "source": "data/genesets/progeny.csv.gz",
+        "n_sources_total": 14,
+        "n_sources_after_tmin": 14,
+        "tmin": 5,
+        "size_max_filter": null
+      }
+    ],
+    "method": {
+      "gene_set": "gsea",
+      "footprint": "ulm",
+      "seed": 42,
+      "times": 1000
+    },
+    "cellwise": {
+      "method": "aucell",
+      "net": "hallmark",
+      "n_sources_scored": 50,
+      "top_by_cell_type": [
+        {
+          "cell_type": "CD14+ Monocytes",
+          "top_sources": [
+            "INTERFERON_ALPHA_RESPONSE",
+            "INTERFERON_GAMMA_RESPONSE"
+          ]
+        }
+      ]
+    },
+    "contrast": {
+      "pseudobulk": {
+        "sample_col": "donor",
+        "groups_col": "stim",
+        "layer": "counts",
+        "mode": "sum",
+        "n_donors": 8,
+        "design": "~stim",
+        "_design_설명": "donor 를 넣었으면 그대로 적는다 (예: ~donor + stim)",
+        "filters": {
+          "min_cells": 10,
+          "min_counts": 1000,
+          "filter_by_expr": true
+        },
+        "per_cell_type": [
+          {
+            "cell_type": "CD14+ Monocytes",
+            "n_samples_ctrl": 8,
+            "n_samples_stim": 8,
+            "n_genes_after_filter": 9840,
+            "low_confidence": false
+          }
+        ]
+      },
+      "de": {
+        "tool": "pydeseq2",
+        "stat": "wald",
+        "padj_cutoff": 0.05,
+        "per_cell_type": [
+          {
+            "cell_type": "CD14+ Monocytes",
+            "n_deg_pseudobulk": 412,
+            "n_deg_cellwise": 3874,
+            "_설명": "6단계 세포 단위 결과와 나란히 둔다. 자릿수 차이가 pseudoreplication 의 크기다"
+          }
+        ]
+      },
+      "enrichment": {
+        "padj_cutoff": 0.05,
+        "per_cell_type": [
+          {
+            "cell_type": "CD14+ Monocytes",
+            "n_significant": 11,
+            "top_sources": [
+              {
+                "source": "INTERFERON_ALPHA_RESPONSE",
+                "rank": 1,
+                "score": 3.41,
+                "padj": 0.0009
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "positive_control": {
+      "_설명": "IFN-beta 자극이므로 인터페론 반응이 상위여야 한다. 상위 10위 밖이면 앞 단계를 의심한다",
+      "expected": [
+        "INTERFERON_ALPHA_RESPONSE",
+        "INTERFERON_GAMMA_RESPONSE"
+      ],
+      "rank_observed": {
+        "INTERFERON_ALPHA_RESPONSE": 1
+      },
+      "passed": true,
+      "leading_edge_top5": [
+        "ISG15",
+        "IFI6",
+        "MX1",
+        "IFIT1",
+        "ISG20"
+      ]
+    },
+    "redundancy": {
+      "_설명": "상위 집합끼리 유전자가 겹치면 서로 다른 발견이 아니다",
+      "jaccard_cutoff": 0.5,
+      "n_top_sources": 10,
+      "n_independent_findings": 4
+    },
+    "by_celltype": {
+      "ranked_by": "INTERFERON_ALPHA_RESPONSE score",
+      "order": [
+        "CD14+ Monocytes",
+        "FCGR3A+ Monocytes",
+        "Dendritic cells"
+      ],
+      "cell_type_specific": [
+        {
+          "cell_type": "NK cells",
+          "source": "예시 — 이 타입에서만 움직인 경로. 없으면 빈 배열로 둔다"
+        }
+      ]
+    },
+    "versions": {
+      "decoupler": "2.2.0",
+      "pydeseq2": "0.5.4",
+      "scanpy": "1.11.5",
+      "_설명": "추정하지 말고 실제로 print 한 값을 적는다"
+    }
+  },
   "validation": {
     "agent": "step-validator",
     "rubric": "accuracy_completeness_1_5",
@@ -73,7 +221,9 @@
         "accuracy": 4,
         "completeness": 3,
         "gate": "WARN",
-        "issues": ["보정 후 IFN 반응 유전자 유지 여부를 그림으로만 확인했다 (3.4 수치 표 없음)"],
+        "issues": [
+          "보정 후 IFN 반응 유전자 유지 여부를 그림으로만 확인했다 (3.4 수치 표 없음)"
+        ],
         "report": "results/validation/03_batch_integration.md"
       }
     ],
@@ -84,7 +234,6 @@
     "n_fail": 0,
     "n_unknown": 0
   },
-
   "decisions": [
     {
       "step": "qc",
@@ -101,12 +250,15 @@
       "decided_by": "human"
     }
   ],
-
   "artifacts": {
-    "figures": ["figures/qc/violin_qc.png", "figures/clustering/umap_leiden.png"],
-    "tables": ["results/deg/deg_per_celltype.csv"],
+    "figures": [
+      "figures/qc/violin_qc.png",
+      "figures/clustering/umap_leiden.png"
+    ],
+    "tables": [
+      "results/deg/deg_per_celltype.csv"
+    ],
     "report": "results/summary/report.html"
   },
-
   "notes": "자유 기술. 다른 실험과 비교할 때 알아야 할 특이사항."
 }

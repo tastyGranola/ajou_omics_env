@@ -1,6 +1,7 @@
 single_cell_project/
 ├── data/
 │   ├── raw/
+│   ├── genesets/
 │   └── processed/
 │
 ├── scripts/
@@ -13,6 +14,7 @@ single_cell_project/
 │   ├── clustering/
 │   ├── annotation/
 │   ├── deg/
+│   ├── functional/
 │   ├── condition_analysis/
 │   └── summary/
 │
@@ -20,7 +22,8 @@ single_cell_project/
 │   ├── qc/
 │   ├── clustering/
 │   ├── annotation/
-│   └── deg/
+│   ├── deg/
+│   └── functional/
 │
 ├── config/
 │
@@ -37,6 +40,7 @@ single_cell_project/
 분석 목적과 복잡도에 따라 필요한 파일을 자유롭게 생성·통합·분리할 수 있으며, 사용하지 않는 디렉토리를 형식적으로 채울 필요는 없다.
 
 data/raw/: 원본 데이터. 가능하면 수정하지 않는다.
+data/genesets/: 기능 분석용 prior knowledge(gene set·footprint) 캐시. 공용 입력이므로 읽기만 한다.
 data/processed/: QC, preprocessing, annotation 등 분석 과정에서 생성되는 재사용 가능한 중간 데이터.
 scripts/: 재현 가능하고 반복 실행할 분석 코드. 필요에 따라 하나 또는 여러 파일로 구성한다.
 notebooks/: 데이터 탐색, 분석 과정 확인, 시각적 검토, 가설 검증, 결과 해석 등을 위한 interactive analysis 공간. 모든 분석을 반드시 notebook으로 작성할 필요는 없으며, 안정화된 로직은 필요에 따라 scripts/로 옮길 수 있다.
@@ -45,6 +49,7 @@ results/doublet/: doublet detection 관련 결과.
 results/clustering/: 차원 축소, neighborhood graph, clustering 등 세포 구조 분석 결과.
 results/annotation/: marker 분석, cell-type annotation 및 annotation 검증 결과.
 results/deg/: differential expression 분석 결과.
+results/functional/: gene set enrichment, pathway·transcription factor 활성 추정 등 기능 분석 결과. 어떤 prior knowledge(gene set·footprint)와 어떤 통계 방법을 썼는지를 결과 파일이나 metrics.json에 함께 남긴다. 이 기록이 없으면 결과를 재현할 수 없다.
 results/condition_analysis/: treatment, disease, stimulation 등 condition 간 비교 분석 결과.
 results/summary/: 이 작업 트리 전체의 요약 산출물. metrics.json과 report.html이 여기에 놓인다. 다른 실험과 비교할 때 읽는 위치이므로 파일명을 임의로 바꾸지 않는다.
 figures/: 분석 과정에서 생성한 주요 시각화. 필요한 경우 목적에 맞는 하위 디렉토리를 자유롭게 추가한다.
@@ -68,6 +73,10 @@ Report 생성 때문에 분석 세션을 종료하거나 사용자의 추가 입
 
 새로운 분석 요청이 들어오면 기존 report 생성을 기다리지 말고 가능한 범위에서 분석을 계속 진행한다. 이후 분석 결과가 변경되거나 추가되면 필요에 따라 report를 갱신하거나 새 버전을 생성한다.
 
+data/genesets/는 기능 분석에 쓰는 prior knowledge(gene set·footprint) 캐시다. 읽기만 하고 쓰지 않는다. 새 자원이 필요하면 parallel_lab/fetch_genesets.py로 받아 캐시에 더한다. 분석 코드 안에서 매번 원격으로 내려받지 않는다 — 원격 자원은 조용히 바뀌고, 그러면 같은 코드가 다른 결과를 낸다.
+
+이 환경의 decoupler는 2.x다. dc.mt.* / dc.op.* / dc.pp.* / dc.pl.* / dc.tl.* 를 쓴다. dc.run_ulm, dc.get_progeny, dc.get_pseudobulk 같은 1.x 함수는 존재하지 않는다. 기능 분석 코드를 작성하기 전에 parallel_lab/CHEATSHEET.md를 먼저 읽는다.
+
 core_markers.xlsx는 celltype별 핵심 marker 목록을 담고 있는 참조 파일이다. 사용자의 명시적인 지시가 있거나 annotation 결과를 검증하는 단계가 아닌 이상 이 파일을 사용하지 않는다.
 
 skill을 작성하거나 분석 결과에 대한 근거를 설명할 때는 항상 한글로 작성한다.
@@ -87,7 +96,7 @@ skill을 작성하거나 분석 결과에 대한 근거를 설명할 때는 항�
 
 작업 범위는 이 작업 트리 안으로 제한한다. 다른 실험의 디렉토리를 읽거나 쓰지 않고, worktrees/나 comparison/을 만들지 않는다. 다른 실험이 무엇을 하고 있는지 궁금하더라도 들여다보지 않는다. 실험 사이의 독립성이 비교의 전제다.
 
-이 작업 트리 안에서 심볼릭 링크로 걸린 경로는 main과 공유되는 공용 파일이다. data/raw/, mcp_lab/, parallel_lab/, .devcontainer/, .claude/agents/, core_markers.xlsx가 여기에 해당한다. 읽기만 하고 쓰거나 지우거나 이름을 바꾸지 않는다. 링크를 통해 쓰면 main과 다른 실험의 파일까지 함께 바뀐다. 어떤 경로가 링크인지 확실하지 않으면 ls -l로 확인한다.
+이 작업 트리 안에서 심볼릭 링크로 걸린 경로는 main과 공유되는 공용 파일이다. data/raw/, data/genesets/, mcp_lab/, parallel_lab/, .devcontainer/, .claude/agents/, core_markers.xlsx가 여기에 해당한다. 읽기만 하고 쓰거나 지우거나 이름을 바꾸지 않는다. 링크를 통해 쓰면 main과 다른 실험의 파일까지 함께 바뀐다. 어떤 경로가 링크인지 확실하지 않으면 ls -l로 확인한다.
 
 data/processed/는 공유하지 않는다. 이 작업 트리만의 실물 디렉토리이므로 분석 중간 데이터는 평소대로 여기에 쓴다.
 

@@ -13,22 +13,37 @@ cd /workspaces/ajou-omics-env && claude
 ## 여는 프롬프트 — 그대로 붙여 넣으세요
 
 ```
-worktrees/ 아래 두 실험을 비교해줘.
+Task       두 병렬 실험의 결과와 결정 과정을 비교한다
+Objective  같은 데이터·같은 질문인데 결과가 어디서 얼마나 갈렸고,
+           그 차이를 만든 결정이 무엇이었는지 규명한다.
 
-각 실험의 EXPERIMENT.md 와 results/summary/metrics.json, results/, figures/ 를 읽고
-comparison/comparison_report.html 과 comparison/comparison.md 를 만들어줘.
+Dataset    worktrees/ 아래 각 실험의
+             EXPERIMENT.md                    아이디어 · 결정 로그
+             results/summary/metrics.json     공통 스키마 산출물
+             results/ · figures/              단계별 산출물
+             results/validation/              단계별 채점 리포트
 
-이걸 꼭 담아줘.
-  1. 같은 데이터·같은 질문인데 결과 수치가 어디서 얼마나 갈렸는지
-  2. 그 차이를 만든 결정이 무엇이었는지 — 갈라진 지점을 짚어줘
-  3. 각 결정을 누가 했는지 (claude / human) 를 세어서 두 실험을 대비시켜줘
-  4. 어느 쪽이 옳은지 이 데이터로 판단할 수 없는 항목은 그렇다고 명시해줘
-  5. 두 실험의 results/validation/ 과 metrics.json 의 validation 블록을 나란히 놓고,
-     단계별 정확성·완결성 점수를 표로 대비시켜줘. 같은 채점자가 어디에서
-     몇 점 차이를 냈고, 그 차이가 어느 결정에서 비롯됐는지까지
+Path       작업    저장소 루트. comparison/ 에만 쓴다.
+                   실험 worktree 안의 파일은 절대 고치지 않는다.
 
-실험 worktree 안의 파일은 고치지 마.
+Expected Output
+  1  결과 수치가 갈린 지점 — 세포 수 · 클러스터 수 · 세포 타입 수 · DEG 개수 ·
+     상위 경로. 어디서 얼마나 갈렸는지
+  2  그 차이를 만든 결정 — 두 실험이 처음으로 갈라진 지점을 짚는다
+  3  결정 주체 집계 — 각 결정을 누가 했는지(claude / human) 세어 두 실험을 대비
+  4  기능 분석 대비 — 세 입력(readout · prior knowledge · method)이 각각 무엇이었나,
+     상위 경로가 얼마나 겹치나, 양성 대조(IFN 반응)의 순위, 중복 정리 후 발견 개수,
+     세포 단위 DEG 와 pseudobulk DEG 의 차이가 두 실험에서 비슷한가
+  5  검증 점수 대비 — 단계별 정확성·완결성을 표로. 같은 채점자가 어디에서 몇 점
+     차이를 냈고 그 차이가 어느 결정에서 비롯됐는지
+  6  판단 불가 항목 — 어느 쪽이 옳은지 이 데이터로 판단할 수 없는 것은 그렇다고 명시
+
+Output Format
+  comparison/comparison_report.html
+  comparison/comparison.md          같은 내용의 요약
 ```
+
+---
 
 ## 이어서 물어볼 것들
 
@@ -45,24 +60,23 @@ comparison/comparison_report.html 과 comparison/comparison.md 를 만들어줘.
 ```
 
 ```
+두 실험이 각각 gene set 을 바꿨을 때와 통계 방법을 바꿨을 때 중
+어느 쪽에서 결과가 더 갈렸어? 두 실험의 답이 서로 같아?
+```
+
+마지막 질문은 챕터가 남긴 주장(결과는 방법의 선택보다 gene set 의 선택에 더 민감하다)이
+**두 실험에서 독립적으로 재현되는지**를 봅니다. 한 실험에서만 그렇게 나왔다면
+그건 자원의 성질이 아니라 그 실험의 다른 결정 때문일 수 있습니다.
+
+```
 채점자가 두 실험 모두에서 4점 이상을 준 항목 중에, 실제로는 문제가 있는 게 있어?
 채점자가 놓친 것을 찾아줘.
 ```
 
 ```
-정확성 점수는 비슷한데 완결성 점수가 갈린 단계가 있어?
-있다면 그건 분석이 다른 게 아니라 기록이 다른 거야. 어느 쪽이 재현 가능해?
+기능 분석에서 양성 대조(IFN 반응이 상위)를 통과했다는 걸 근거로
+나머지 결과까지 맞다고 주장한 곳이 있어? 그 둘은 다른 얘기야.
 ```
 
-## 남길 것
-
-```
-comparison/comparison.md 마지막에 "다음에 시험해 볼 아이디어" 를 세 개만 적어줘.
-각각 어떤 branch 이름으로 실험하면 좋을지도 같이.
-```
-
-그 세 개를 그대로 다음 실습으로 넘길 수 있습니다.
-
-```bash
-bash parallel_lab/setup.sh <아이디어-1> <아이디어-2> <아이디어-3>
-```
+마지막 두 질문이 이 교시의 마무리입니다. **양성 대조는 앞 단계가 안 깨졌다는 것만
+말해 줍니다.** 상위 20위의 나머지가 맞는지는 아무것도 보증하지 않습니다.

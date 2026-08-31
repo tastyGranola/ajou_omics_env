@@ -88,6 +88,7 @@ GEO 원본 파일도 `data/raw/` 에 함께 포함되어 있어, 네트워크 �
   post-create.sh        최초 생성 시 실행되는 설치·점검 스크립트
 .mcp.json               MCP 서버 등록 파일 — 2일차 실습에서 직접 채웁니다
 data/raw/               GEO 원본 파일 (mtx, barcodes, genes, 세포 주석)
+data/genesets/          기능 분석용 gene set · footprint 캐시 (fetch_genesets.py 가 만듭니다)
 data/processed/         전처리된 실습용 h5ad
 notebooks/              실습 노트북
 scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크립트
@@ -127,7 +128,7 @@ bash parallel_lab/status.sh     # 두 실험 상태를 한 표로
 bash parallel_lab/cleanup.sh    # 정리
 ```
 
-공용 입력(`data/raw/`, `mcp_lab/`, `core_markers.xlsx` 등)은 복사하지 않고 main 을
+공용 입력(`data/raw/`, `data/genesets/`, `mcp_lab/`, `core_markers.xlsx` 등)은 복사하지 않고 main 을
 가리키는 심볼릭 링크로 걸립니다. 실험이 **만드는** 것(`scripts/`, `data/processed/`,
 `results/`, `figures/`)만 worktree 마다 따로 생깁니다 — worktree 하나당 약 17MB.
 
@@ -140,6 +141,30 @@ bash parallel_lab/setup.sh harmony-integration scvi-integration no-integration
 
 안내서는 [parallel_lab/LAB.md](parallel_lab/LAB.md) 입니다.
 
+### 분석 범위 — 기능 분석까지 갑니다
+
+두 실험이 도는 분석은 QC → 클러스터링 → 주석 → 차등발현에서 끝나지 않고,
+**조건 간 기능 분석(경로 · 전사인자 활성)** 까지 갑니다. 내용은
+[sc-best-practices 의 Gene set enrichment and pathway analysis](https://www.sc-best-practices.org/conditions/gsea-pathway/)
+챕터를 따랐습니다.
+
+```bash
+python3 parallel_lab/verify.py            # 패키지 · gene set 캐시 · 입력 데이터 점검
+python3 parallel_lab/fetch_genesets.py    # gene set 을 data/genesets/ 에 캐시 (최초 1회)
+```
+
+| | |
+|---|---|
+| 무엇을 하나 | 세포 수준 점수(AUCell · ULM) · pseudobulk 조건 대비(GSEA · ULM · ORA) |
+| 쓰는 자원 | MSigDB Hallmark · Reactome · PROGENy · CollecTRI |
+| 왜 pseudobulk 인가 | 도너가 8명, 조건마다 8명 전부 있습니다. (도너 × 조건)으로 합치면 **8 대 8** 의 진짜 반복이 되고, 세포 단위 검정의 pseudoreplication 이 해소됩니다 |
+| 양성 대조 | IFN-beta 를 넣었으니 인터페론 반응이 최상위여야 합니다. **안 나오면 앞 단계가 깨진 것입니다** |
+
+> **decoupler 는 2.0 에서 API 가 전면 개편되었습니다** (`dc.run_ulm` → `dc.mt.ulm`).
+> LLM 이 학습한 코드 대부분은 1.x 라 Claude 가 옛 함수를 쓸 가능성이 높습니다.
+> 대응표가 [parallel_lab/CHEATSHEET.md](parallel_lab/CHEATSHEET.md) 맨 앞에 있습니다.
+> 이미 만들어 둔 Codespace 는 `pip install -U 'decoupler>=2.2,<3' 'pydeseq2>=0.5,<1'` 를 한 번 실행하세요.
+
 ## 설치되는 주요 패키지
 
 `scanpy` `anndata` `leidenalg` `igraph` `umap-learn` `harmonypy` `pydeseq2` `decoupler`
@@ -151,3 +176,12 @@ bash parallel_lab/setup.sh harmony-integration scvi-integration no-integration
 
 Kang HM, Subramaniam M, Targ S, et al. **Multiplexed droplet single-cell RNA-sequencing using
 natural genetic variation.** *Nature Biotechnology* 36, 89–94 (2018).
+
+Heumos L, Schaar AC, Lance C, et al. **Best practices for single-cell analysis across modalities.**
+*Nature Reviews Genetics* 24, 550–572 (2023). — https://www.sc-best-practices.org/
+
+Badia-i-Mompel P, Vélez Santiago J, Braunger J, et al. **decoupleR: ensemble of computational
+methods to infer biological activities from omics data.** *Bioinformatics Advances* 2, vbac016 (2022).
+
+Holland CH, Tanevski J, Perales-Patón J, et al. **Robustness and applicability of transcription
+factor and pathway analysis tools on single-cell RNA-seq data.** *Genome Biology* 21, 36 (2020).

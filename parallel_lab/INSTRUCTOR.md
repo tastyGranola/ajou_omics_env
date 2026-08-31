@@ -40,7 +40,18 @@ parallel_lab/
 
 .claude/agents/
 └── step-validator.md       단계별 검증 에이전트 (읽기 전용) · 모든 실험이 공유
+                            기능 분석 단계의 확인 목록도 여기에 들어 있습니다
+
+data/genesets/              기능 분석의 prior knowledge 캐시 · 공용 (커밋 필요)
 ```
+
+기능 분석용 자산은 `parallel_lab/` 안에 있습니다.
+
+| | |
+|---|---|
+| `CHEATSHEET.md` | decoupler 2.x API · **맨 앞이 1.x↔2.x 대응표** |
+| `fetch_genesets.py` | Hallmark · Reactome · PROGENy · CollecTRI 를 `data/genesets/` 에 캐시 |
+| `verify.py` | 패키지 · 캐시 · 입력 데이터 점검 |
 
 실험별 진행 방식은 `setup.sh` 의 `rules_block()` 안에 있습니다.
 방식을 바꾸고 싶으면 그 함수만 고치면 됩니다.
@@ -63,9 +74,14 @@ A 는 `claude`, B 는 `human` 이 대부분입니다. 같은 데이터·같은 �
 안 넣으면 B 가 A 의 결과를 참고해서 수렴해 버리고, 비교할 것이 없어집니다.
 
 **(4) 공용 입력은 나눠 쓰고, 실험이 만드는 것만 가른다.**
-`setup.sh` 는 저장소를 통째로 복사하지 않습니다. `data/raw/` `mcp_lab/` `parallel_lab/`
-`.devcontainer/` `.claude/agents/` `core_markers.xlsx` 는 **main 을 가리키는 심볼릭 링크**로 걸립니다.
-worktree 하나가 73MB → **17MB** 가 됩니다.
+`setup.sh` 는 저장소를 통째로 복사하지 않습니다. `data/raw/` `data/genesets/` `mcp_lab/`
+`parallel_lab/` `.devcontainer/` `.claude/agents/` `core_markers.xlsx` 는
+**main 을 가리키는 심볼릭 링크**로 걸립니다. worktree 하나가 73MB → **17MB** 가 됩니다.
+
+`data/genesets/`(기능 분석의 prior knowledge 캐시)를 공유하는 이유는 `.claude/agents/` 와 같습니다.
+실험마다 다른 gene set 을 받아 오면 **"gene set 을 바꿨더니 결과가 달라졌다" 를 말할 수 없습니다.**
+단, `link_shared.py` 가 `git ls-files` 로 추적되는 파일만 링크하므로
+**강의 전에 `data/genesets/` 를 커밋해 두어야 합니다.**
 
 `data/processed/` 는 **일부러 공유하지 않습니다.** `CLAUDE.md` 상 QC·정규화 중간 데이터가
 쌓이는 곳이라, 공유하면 두 실험이 서로의 중간 파일을 덮어씁니다. 여기가 이 설계의
@@ -85,7 +101,7 @@ Table S32–S33 의 완결성·정확성 1–5 루브릭, 그리고 Section I �
 **정확성과 완결성을 나눈 것이 4번에서 쓸 재료입니다.** 두 실험의 정확성이 비슷한데
 완결성만 갈렸다면 그것은 분석이 다른 게 아니라 **기록이 다른 것**입니다.
 
-세션 A 는 프롬프트에 검증 호출이 `[고정]` 으로 박혀 있어 스스로 검증하고 스스로 반영합니다.
+세션 A 는 프롬프트 `R4` 에 검증 호출이 규칙으로 박혀 있어 스스로 검증하고 스스로 반영합니다.
 세션 B 는 수강생이 원할 때 부릅니다. **같은 검증 결과를 누가 읽느냐가 다시 한번 갈립니다.**
 
 검증자도 Claude 라는 점을 4번에서 반드시 짚으세요. `PASS` 가 옳다는 뜻이 아닙니다.
@@ -145,7 +161,9 @@ untracked 로 보고 `git status` 에 남기 때문입니다. 지금은 `git sta
 git status                       # 깨끗해야 함
 bash parallel_lab/setup.sh
 ls worktrees/plan-execute        # data/ CLAUDE.md EXPERIMENT.md .mcp.json
-find worktrees/plan-execute -type l | wc -l     # 공용 링크 36개
+find worktrees/plan-execute -type l | wc -l     # 공용 링크 44개
+                                               # gene set 넷을 다 받아 커밋했을 때.
+                                               # data/genesets/ 미커밋이면 39개
 git -C worktrees/plan-execute status --short    # ?? EXPERIMENT.md 하나만
 du -sh worktrees/plan-execute    # 17M 안팎
 tail -20 worktrees/plan-execute/CLAUDE.md      # 진행 방식 블록이 붙었는지
@@ -161,4 +179,80 @@ git branch                       # exp/* 가 없어야 함
 한 번은 **실제로 A 를 끝까지 돌려 보세요.** 8GB 에서 걸리는 시간을 알고 계셔야
 3번의 20분을 배분할 수 있습니다.
 
-## 8. 환경 — 1교시 Codespace 그대로 씁니다
+## 8. 7단계 기능 분석 — 강사가 알고 있어야 할 것
+
+**(1) 양성 대조가 내장되어 있다.** IFN-beta 자극이므로 인터페론 반응이 최상위여야 합니다.
+앞 단계 파손 탐지(배치 보정으로 조건 효과를 지웠다면 여기서 드러납니다)와
+환각 탐지를 동시에 합니다.
+
+**다만 통과가 나머지를 보증하지 않습니다.** 4번에서 반드시 짚으세요 —
+비교 프롬프트의 마지막 질문이 이걸 노립니다.
+
+**(2) pseudobulk 가 6단계의 미해결 항목을 푼다.**
+6단계는 pseudoreplication 을 **한계로 적기만** 합니다. 도너가 8명, 조건마다 8명 전부
+있으니 (도너 × 조건)으로 합치면 **8 대 8** 의 진짜 반복이 됩니다.
+수강생이 두 DEG 개수를 나란히 놓게 하세요 — 대개 자릿수가 다릅니다.
+1교시의 "미보정 4,231개 vs 보정 187개" 와 같은 종류의 장면이니 연결해서 설명하세요.
+
+**(3) 한 실험 안에서 비교시킨다.** 프롬프트 7.4 가 gene set 을 둘 이상, 방법을 둘 이상
+써서 일치도를 재게 합니다. 챕터의 결론(결과는 방법의 선택보다 gene set 의 선택에
+더 민감하다 — Holland et al. 2020)을 **실험을 늘리지 않고** 확인하는 자리입니다.
+
+세션 C 에서는 "**두 실험의 답이 서로 같은가**" 를 봅니다. 한 실험에서만 그렇게 나왔다면
+자원의 성질이 아니라 그 실험의 다른 결정 때문일 수 있습니다.
+
+**(4) 자원의 성격 차이가 수치로 보인다.** `fetch_genesets.py` 가 집합 크기 분포를
+manifest 에 남깁니다. 아래는 실측값입니다.
+
+| | 종류 | 집합 수 | 크기 (중앙값) | `tmin=15` 에서 |
+|---|---|---|---|---|
+| Hallmark | gene set | 50 | 32~200 (199) | **하나도 안 잘림** |
+| Reactome | gene set | 2,105 | 5~2,613 (25) | **710개가 잘림** (3분의 1) |
+| PROGENy | footprint | 14 | 202~500 (499) | 안 잘림 (`top=500` 이라) |
+| CollecTRI | footprint | 1,185 | 1~1,304 (9) | **716개가 잘림 — 걸면 안 됨** |
+
+마지막 줄이 중요합니다 — `tmin` 은 gene set 에 거는 것이지 footprint 에 거는 것이 아닙니다.
+CollecTRI 에 `tmin=15` 를 걸면 TF 의 60%가 조용히 사라지고, **그래도 STAT1 은 남아서
+양성 대조는 통과합니다.** 양성 대조가 못 잡는 오류의 좋은 예입니다.
+
+**(5) decoupler 2.x 를 쓰는 것 자체가 실습 장치다.**
+decoupler 는 2.0 에서 API 가 전면 개편됐습니다 (`dc.run_ulm` → `dc.mt.ulm`).
+LLM 이 학습한 코드 대부분은 1.x 이므로 **Claude 가 1.x 코드를 쓸 가능성이 높습니다.**
+
+버그가 아니라 **오늘 반드시 보게 해야 할 장면**입니다. `AttributeError` 가 났을 때
+Claude 가 스스로 `CHEATSHEET.md` 를 보고 고치는지 지켜보세요. 못 고치고 다른 1.x 함수로
+바꿔 가며 시도하면, 그때 "설치된 버전의 문서를 확인해" 라고 개입하는 것이
+이 교시에서 가장 좋은 개입입니다.
+
+### 실측 결과 — 미리 알고 계셔야 할 것
+
+전체 세포를 (도너 × 조건)으로 pseudobulk 해서 실제로 돌려 본 값입니다
+(세포 타입을 나누지 않은 것이라 수강생 결과와 정확히 같지는 않습니다).
+
+```
+pseudobulk       16 표본 (ctrl 8 · stim 8) · filter_by_expr 후 5,969 유전자
+pydeseq2         padj < 0.05 인 유전자 1,821개
+Hallmark GSEA    1. INTERFERON_ALPHA_RESPONSE   2.65
+                 2. INTERFERON_GAMMA_RESPONSE   2.60
+                 3. KRAS_SIGNALING_DN           1.83
+PROGENy ULM      JAK-STAT 47.1  ·  NFkB 11.4  ·  TNFa 6.2
+```
+
+| 항목 | 예상 |
+|---|---|
+| 상위 1·2위 | 어떤 자원·방법으로도 인터페론. **여기는 안 갈립니다** |
+| 3위 이하 | `KRAS_SIGNALING_DN` 처럼 해석하기 난감한 것이 섞입니다. **여기가 갈립니다** |
+| 세포 타입 순서 | 단핵구 계열(CD14+ · FCGR3A+)에서 IFN 반응이 가장 강한 경향 |
+| PROGENy | `JAK-STAT` 이 압도적 (다음 항목의 4배) |
+| CollecTRI | `STAT1` · `STAT2` · `IRF9` · `IRF1` |
+| DC · Megakaryocyte | 세포가 적어 pseudobulk 표본이 얇음. 저신뢰 표시되는지 확인 |
+
+### 자원
+
+**세포 수준 점수를 Reactome 전체(2,105개 집합)로 돌리게 하지 마세요.** 8GB 에서 버겁습니다.
+세포 수준은 Hallmark(50개)나 PROGENy(14개)로, Reactome 은 조건 대비(행 몇 개)에만
+쓰는 것이 맞습니다. 계획 단계에서 봐 주세요.
+
+세포 타입 8개에 pydeseq2 를 도는 것이 7단계에서 가장 오래 걸립니다.
+
+## 9. 환경 — 1교시 Codespace 그대로 씁니다

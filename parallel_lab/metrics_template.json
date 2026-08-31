@@ -64,6 +64,27 @@
     ]
   },
 
+  "validation": {
+    "agent": "step-validator",
+    "rubric": "accuracy_completeness_1_5",
+    "per_step": [
+      {
+        "step": "preprocessing",
+        "accuracy": 4,
+        "completeness": 3,
+        "gate": "WARN",
+        "issues": ["보정 후 IFN 반응 유전자 유지 여부를 그림으로만 확인했다 (3.4 수치 표 없음)"],
+        "report": "results/validation/03_batch_integration.md"
+      }
+    ],
+    "mean_accuracy": 4.0,
+    "mean_completeness": 3.0,
+    "n_pass": 0,
+    "n_warn": 1,
+    "n_fail": 0,
+    "n_unknown": 0
+  },
+
   "decisions": [
     {
       "step": "qc",

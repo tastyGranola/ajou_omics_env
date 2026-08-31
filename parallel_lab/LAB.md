@@ -47,7 +47,7 @@
 
 | | 무엇 | 왜 |
 |---|---|---|
-| **공유** (심볼릭 링크) | `data/raw/` · `mcp_lab/` · `parallel_lab/` · `.devcontainer/` · `core_markers.xlsx` | 실험이 읽기만 하는 공용 입력·도구. 복사하면 55MB 씩 늘어날 뿐입니다 |
+| **공유** (심볼릭 링크) | `data/raw/` · `mcp_lab/` · `parallel_lab/` · `.devcontainer/` · `.claude/agents/` · `core_markers.xlsx` | 실험이 읽기만 하는 공용 입력·도구. 복사하면 55MB 씩 늘어날 뿐입니다 |
 | **따로** (실물) | `scripts/` · `notebooks/` · `data/processed/` · `results/` · `figures/` · `EXPERIMENT.md` | 실험이 **만드는** 것. 섞이면 안 됩니다 |
 
 `data/processed/` 가 따로인 이유는 여기가 QC·정규화 중간 데이터가 쌓이는 곳이기 때문입니다.
@@ -89,6 +89,7 @@ bash parallel_lab/setup.sh
 | `CLAUDE.md` | 공통 지침 **+ 이 실험의 진행 방식** 이 덧붙어 있습니다 |
 | `EXPERIMENT.md` | 아이디어 · **결정 로그** · 진행 체크리스트 |
 | `.mcp.json` | 1교시에서 붙인 MCP 서버가 그대로 따라옵니다 |
+| `.claude/agents/` | 단계별 검증 에이전트 `step-validator`. **두 실험이 같은 것을 씁니다** |
 
 `worktrees/plan-execute/CLAUDE.md` 를 열어 **맨 아래**를 한 번 보세요.
 세션 B 의 것과 비교해 보면, 오늘 바뀌는 게 정확히 무엇인지 한눈에 보입니다.

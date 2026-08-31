@@ -37,12 +37,15 @@ parallel_lab/
 ├── cleanup.sh              worktree/branch 제거 (comparison/ 은 남김)
 ├── metrics_template.json   비교를 가능하게 하는 공통 스키마
 └── prompts/                수강생이 붙여 넣는 프롬프트 3개
+
+.claude/agents/
+└── step-validator.md       단계별 검증 에이전트 (읽기 전용) · 모든 실험이 공유
 ```
 
 실험별 진행 방식은 `setup.sh` 의 `rules_block()` 안에 있습니다.
 방식을 바꾸고 싶으면 그 함수만 고치면 됩니다.
 
-## 4. 설계 의도 — 세 가지
+## 4. 설계 의도 — 다섯 가지
 
 **(1) 격리는 worktree 가, 비교는 스키마가 한다.**
 worktree 는 `results/` 충돌만 막아 줍니다. 비교가 되게 하는 것은
@@ -61,12 +64,32 @@ A 는 `claude`, B 는 `human` 이 대부분입니다. 같은 데이터·같은 �
 
 **(4) 공용 입력은 나눠 쓰고, 실험이 만드는 것만 가른다.**
 `setup.sh` 는 저장소를 통째로 복사하지 않습니다. `data/raw/` `mcp_lab/` `parallel_lab/`
-`.devcontainer/` `core_markers.xlsx` 는 **main 을 가리키는 심볼릭 링크**로 걸립니다.
+`.devcontainer/` `.claude/agents/` `core_markers.xlsx` 는 **main 을 가리키는 심볼릭 링크**로 걸립니다.
 worktree 하나가 73MB → **17MB** 가 됩니다.
 
 `data/processed/` 는 **일부러 공유하지 않습니다.** `CLAUDE.md` 상 QC·정규화 중간 데이터가
 쌓이는 곳이라, 공유하면 두 실험이 서로의 중간 파일을 덮어씁니다. 여기가 이 설계의
 유일한 판단 지점이니 질문이 나오면 이걸로 답하세요.
+
+**(5) 검증자는 실험 밖에 두고, 두 축으로 채점하게 한다.**
+`.claude/agents/step-validator.md` 는 단계마다 **정확성**과 **완결성**을 1–5 점으로 매기는
+읽기 전용 서브에이전트입니다. 실험 안이 아니라 **공용 경로에 두고 링크로 나눠 씁니다.**
+채점 기준까지 실험마다 다르면 "A 점수가 더 높았다" 가 아무 의미도 없어지기 때문입니다.
+
+채점표와 절차는 Biomni 논문 보충자료(Science 393, eadz4351)에서 가져왔습니다 —
+Table S32–S33 의 완결성·정확성 1–5 루브릭, 그리고 Section I 의 두 가지 장치입니다.
+**평가자를 출처에 블라인드로 두는 것**(채점 전에 진행 방식을 보지 않는다)과,
+**발견이 데이터에서 나온 것인지 코드와 트레이스를 따라가며 확인하는 것**(수치 추적 최소 3건).
+데이터에 없는 수치가 기록되어 있으면 정확성 1점입니다.
+
+**정확성과 완결성을 나눈 것이 4번에서 쓸 재료입니다.** 두 실험의 정확성이 비슷한데
+완결성만 갈렸다면 그것은 분석이 다른 게 아니라 **기록이 다른 것**입니다.
+
+세션 A 는 프롬프트에 검증 호출이 `[고정]` 으로 박혀 있어 스스로 검증하고 스스로 반영합니다.
+세션 B 는 수강생이 원할 때 부릅니다. **같은 검증 결과를 누가 읽느냐가 다시 한번 갈립니다.**
+
+검증자도 Claude 라는 점을 4번에서 반드시 짚으세요. `PASS` 가 옳다는 뜻이 아닙니다.
+세션 C 의 "검증자가 놓친 것을 찾아줘" 가 이 교시에서 가장 좋은 마무리 질문입니다.
 
 수강생에게 보여줄 한 줄:
 
@@ -112,6 +135,7 @@ untracked 로 보고 `git status` 에 남기 때문입니다. 지금은 `git sta
 | 디스크 | worktree 하나당 17MB (`data/processed/` 18MB 만 실물). 기본 2개 = +34MB |
 | 메모리 | **8GB 에서 scanpy 세션 두 개가 동시에 돕니다.** 여기가 유일한 병목입니다 |
 | 세션 | A 실행 · B 대화 · C 비교 — 터미널 3개 |
+| 시간 | A 가 단계마다 검증 에이전트를 부릅니다. 검증 7회 + resolution sweep 5회분이 더해지니 **드라이런에서 A 의 총 실행 시간을 반드시 다시 재세요** |
 
 메모리가 빠듯해 보이면 3번에서 B 를 annotation 까지만 돌리게 하세요.
 
@@ -121,7 +145,7 @@ untracked 로 보고 `git status` 에 남기 때문입니다. 지금은 `git sta
 git status                       # 깨끗해야 함
 bash parallel_lab/setup.sh
 ls worktrees/plan-execute        # data/ CLAUDE.md EXPERIMENT.md .mcp.json
-find worktrees/plan-execute -type l | wc -l     # 공용 링크 33개
+find worktrees/plan-execute -type l | wc -l     # 공용 링크 35개
 git -C worktrees/plan-execute status --short    # ?? EXPERIMENT.md 하나만
 du -sh worktrees/plan-execute    # 17M 안팎
 tail -20 worktrees/plan-execute/CLAUDE.md      # 진행 방식 블록이 붙었는지

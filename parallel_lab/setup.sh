@@ -25,7 +25,8 @@ fi
 # main 과 공유할 것 — 실험이 만들지 않고 읽기만 하는 공용 입력·도구.
 # 이 경로들은 복사하지 않고 main 을 가리키는 심볼릭 링크로 건다.
 # data/processed/ 는 분석 중간 데이터가 쌓이는 곳이라 공유하지 않는다 (실험마다 따로).
-SHARED=(data/raw mcp_lab parallel_lab .devcontainer core_markers.xlsx)
+# .claude/agents/ 는 검증 에이전트다. 실험마다 다르면 검증 기준이 달라져 비교가 깨지므로 공유한다.
+SHARED=(data/raw mcp_lab parallel_lab .devcontainer .claude/agents core_markers.xlsx)
 
 IGNORE_DIRTY=0
 NAMES=()

@@ -145,7 +145,7 @@ untracked 로 보고 `git status` 에 남기 때문입니다. 지금은 `git sta
 git status                       # 깨끗해야 함
 bash parallel_lab/setup.sh
 ls worktrees/plan-execute        # data/ CLAUDE.md EXPERIMENT.md .mcp.json
-find worktrees/plan-execute -type l | wc -l     # 공용 링크 35개
+find worktrees/plan-execute -type l | wc -l     # 공용 링크 36개
 git -C worktrees/plan-execute status --short    # ?? EXPERIMENT.md 하나만
 du -sh worktrees/plan-execute    # 17M 안팎
 tail -20 worktrees/plan-execute/CLAUDE.md      # 진행 방식 블록이 붙었는지

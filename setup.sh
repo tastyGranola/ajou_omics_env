@@ -12,9 +12,9 @@
 #   bash setup.sh harmony scvi    # 임의의 아이디어 이름으로 N 개
 #
 # 옵션
-#   --ignore-dirty   커밋되지 않은 변경이 있어도 진행한다
+#   --strict-dirty   커밋되지 않은 변경이 있으면 멈추고 확인받는다 (기본은 무시하고 진행)
 #
-# 실제 세팅(공유 경로 심볼릭 링크 · CLAUDE.md · EXPERIMENT.md)은
+# 실제 세팅(공유 경로 심볼릭 링크 · .venv 공유 · CLAUDE.md · EXPERIMENT.md)은
 # .claude/scripts/worktree_init.sh 가 한다. 공유 경로 목록도 거기에 있다.
 set -euo pipefail
 
@@ -39,7 +39,7 @@ PASS=()
 NAMES=()
 for arg in "$@"; do
   case "$arg" in
-    --ignore-dirty) PASS+=("$arg") ;;
+    --strict-dirty|--ignore-dirty) PASS+=("$arg") ;;
     -*) echo "모르는 옵션입니다: $arg" >&2; exit 1 ;;
     *)  NAMES+=("$arg") ;;
   esac

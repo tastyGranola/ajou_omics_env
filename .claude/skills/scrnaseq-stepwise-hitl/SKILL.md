@@ -30,10 +30,10 @@ worktree 두 개로 나눠 비교), Task/Objective/Dataset/Path 를 두 세션�
         --mode stepwise-hitl --goal "<1에서 확보한 연구 질문>"
    ```
 3. **마지막 줄의 상태에 따라 분기한다** — `WORKTREE`/`EXISTS` 면 `EnterWorktree` 도구를
-   `path: <경로>` 로 호출해 진입하고, `ALREADY_IN_WORKTREE` 면 그대로 1단계로 가고,
-   exit 2(커밋 안 된 변경)면 스크립트가 출력한 두 선택지를 사용자에게 제시하고
-   **답을 기다린다.** 자세한 표는 `scrnaseq-plan-execute` 0단계에 있다 — 두 스킬의
-   세팅 절차는 실험 이름과 `--mode` 만 다르고 나머지는 동일하다.
+   `path: <경로>` 로 호출해 진입하고, `ALREADY_IN_WORKTREE` 면 그대로 1단계로 간다.
+   자세한 표와 커밋되지 않은 변경 처리 방식(기본은 무시하고 계속 진행, `--strict-dirty`
+   를 붙였을 때만 exit 2 로 멈춰 사용자에게 묻는다)은 `scrnaseq-plan-execute` 0단계에
+   있다 — 두 스킬의 세팅 절차는 실험 이름과 `--mode` 만 다르고 나머지는 동일하다.
 
    이 스킬은 매 갈림길에서 사용자에게 묻는 방식이지만, **worktree 세팅은 갈림길이 아니다.**
    위 절차는 묻지 않고 그대로 실행한다. 다만 사용자가 "worktree 없이 여기서 하자"고 하면
@@ -44,6 +44,10 @@ worktree 두 개로 나눠 비교), Task/Objective/Dataset/Path 를 두 세션�
 worktree 안으로 들어온 뒤 `.claude/agents/step-validator.md` 가 있는지 확인한다. 없으면
 사용자에게 알린다. `.claude/` 는 main 을 가리키는 심볼릭 링크이므로, 없다면 그 파일이
 git 에 커밋되지 않았다는 뜻이다.
+
+Python 실행 환경도 `.venv/` 로 main 과 공유된다. 분석 코드를 짜기 전에 `.venv/bin/python`
+에 scanpy·decoupler·celltypist 같은 패키지가 있는지 확인하고 그 인터프리터로 실행한다 —
+없다고 새 가상환경을 만들지 않는다. 자세한 이유는 `scrnaseq-plan-execute` 0.5단계에 있다.
 
 ## 1. Task / Objective / Dataset / Path 를 채운다
 

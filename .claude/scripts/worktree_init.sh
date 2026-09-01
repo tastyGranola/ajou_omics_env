@@ -10,13 +10,17 @@
 # 옵션
 #   --mode <이름>     진행 방식 블록을 고른다 (기본: <이름> 과 같다)
 #   --goal "..."      EXPERIMENT.md 의 목표 줄
-#   --ignore-dirty    커밋되지 않은 변경이 있어도 진행한다
+#   --strict-dirty    커밋되지 않은 변경이 있으면 멈추고 사용자에게 묻는다 (기본은 무시하고 진행)
+#
+# 커밋되지 않은 변경은 기본적으로 무시하고 마지막 커밋을 출발점으로 진행한다 —
+# worktree 세팅 자체는 판단이 갈리는 지점이 아니므로 매번 사용자에게 묻지 않는다.
+# 무엇을 무시했는지는 화면에 그대로 남긴다. 정말 멈춰서 확인받고 싶을 때만 --strict-dirty 를 쓴다.
 #
 # 마지막 줄로 상태를 하나 출력한다. 호출자는 그 줄만 보고 분기하면 된다.
 #   ALREADY_IN_WORKTREE <절대경로>   이미 실험 worktree 안이다 — 세팅할 것이 없다
 #   EXISTS <절대경로>                그 이름의 worktree 가 이미 있다
 #   WORKTREE <절대경로>              새로 만들었다
-# 커밋되지 않은 변경 때문에 멈출 때만 exit 2 로 끝난다.
+# --strict-dirty 를 쓴 상태에서 커밋되지 않은 변경을 만나면 exit 2 로 끝난다.
 set -euo pipefail
 
 # 이 저장소의 실습 데이터셋 기본 목표. --goal 로 덮어쓴다.
@@ -30,6 +34,8 @@ DEFAULT_GOAL="IFN-beta 자극에 대한 PBMC 세포 타입별 반응 차이를 �
 # data/genesets/ 는 기능 분석의 prior knowledge 캐시다. 실험마다 다른 gene set 을 받으면
 #   "gene set 을 바꿨더니 결과가 달라졌다" 를 말할 수 없으므로 공유한다.
 #   ★ git 에 커밋되어 있어야 링크가 걸린다 (link_shared.py 가 git ls-files 를 쓴다).
+# .venv 는 이 목록과 별개다 — .gitignore 대상이라 git ls-files 에 안 잡히므로
+#   link_shared.py 를 못 쓴다. 아래 worktree 생성 이후 별도 블록에서 심볼릭 링크로 건다.
 SHARED=(data/raw data/genesets mcp_lab .devcontainer .claude core_markers.xlsx
         setup.sh status.sh cleanup.sh verify.py fetch_genesets.py link_shared.py
         metrics_template.json)
@@ -39,12 +45,13 @@ SHARED=(data/raw data/genesets mcp_lab .devcontainer .claude core_markers.xlsx
 NAME=""
 MODE=""
 GOAL=""
-IGNORE_DIRTY=0
+IGNORE_DIRTY=1
 while [ $# -gt 0 ]; do
   case "$1" in
     --mode)         MODE="${2:?--mode 뒤에 이름이 필요합니다}"; shift 2 ;;
     --goal)         GOAL="${2:?--goal 뒤에 문장이 필요합니다}"; shift 2 ;;
-    --ignore-dirty) IGNORE_DIRTY=1; shift ;;
+    --ignore-dirty) IGNORE_DIRTY=1; shift ;;   # 기본값과 같다 — 하위 호환용으로 남겨 둔다
+    --strict-dirty) IGNORE_DIRTY=0; shift ;;
     -*)             echo "모르는 옵션입니다: $1" >&2; exit 1 ;;
     *)
       if [ -n "$NAME" ]; then
@@ -110,8 +117,11 @@ if [ -n "$DIRTY" ] && [ "$IGNORE_DIRTY" -eq 0 ]; then
   echo "    1) 지금 상태를 실험의 출발점으로 삼는다"
   echo "         git add -A && git commit -m '병렬 실험 출발점'"
   echo "    2) 마지막 커밋을 출발점으로 삼고 위 변경은 main 에만 둔다"
-  echo "         --ignore-dirty 를 붙여 다시 실행한다"
+  echo "         --strict-dirty 없이 다시 실행한다"
   exit 2
+elif [ -n "$DIRTY" ]; then
+  echo "· 커밋되지 않은 변경이 있지만 무시하고 마지막 커밋을 출발점으로 삼습니다:"
+  echo "$DIRTY" | sed 's/^/    /'
 fi
 
 BASE="$(git rev-parse --abbrev-ref HEAD)"
@@ -199,6 +209,14 @@ python3 "$ROOT/link_shared.py" "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
 git -C "$DIR" checkout-index -a
 python3 "$ROOT/link_shared.py" --link "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
 echo "✓ $DIR   ($NOTE)"
+
+# .venv 는 .gitignore 대상이라 git 이 추적하지 않으므로 SHARED 배열(git 추적 파일 전용
+# link_shared.py)로는 못 건다. 실험마다 scanpy·decoupler 등을 새로 설치하지 않도록
+# main 의 .venv 를 그대로 심볼릭 링크로 공유한다 — 읽기 전용으로 쓴다.
+if [ -d "$ROOT/.venv" ] && [ ! -e "$DIR/.venv" ]; then
+  ln -s "../../.venv" "$DIR/.venv"
+  echo "✓ .venv → main 공유 (심볼릭 링크)"
+fi
 
 # CLAUDE.md — 공통 지침 + 이 실험의 진행 방식
 if [ -f CLAUDE.md ]; then

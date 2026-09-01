@@ -44,7 +44,13 @@ Task 를 먼저 받는 이유는 `EXPERIMENT.md` 의 목표 줄을 실제 연구
    | `WORKTREE <경로>` | `EnterWorktree` 도구를 `path: <경로>` 로 호출해 세션을 그 안으로 옮긴다 |
    | `EXISTS <경로>` | 같은 이름의 실험이 이미 있다. 이어서 할지 다른 이름으로 새로 만들지 사용자에게 묻고, 이어서 하면 똑같이 `EnterWorktree` 로 진입한다 |
    | `ALREADY_IN_WORKTREE <경로>` | 이미 실험 worktree 안에서 세션이 떠 있다. 세팅도 진입도 하지 않고 그대로 1단계로 간다 |
-   | exit 2 (커밋 안 된 변경) | 스크립트가 출력한 두 선택지(지금 커밋 / `--ignore-dirty`)를 사용자에게 그대로 제시하고 **답을 기다린다.** 스스로 커밋하지 않는다 |
+
+   커밋되지 않은 변경이 있어도 스크립트는 기본적으로 멈추지 않는다 — 마지막 커밋을
+   출발점으로 삼고 무엇을 무시했는지 화면에 남긴 뒤 `WORKTREE`/`EXISTS` 로 계속 진행한다.
+   worktree 세팅 자체는 사용자에게 물어야 할 갈림길이 아니기 때문이다. 그 출력을 눈으로
+   확인만 하고 넘어가면 된다 — 스스로 커밋하지 않는다. (드물게 정말 멈춰서 확인받아야
+   하면 `--strict-dirty` 를 붙인다. 그때만 exit 2 로 끝나며, 스크립트가 출력한 두 선택지
+   [지금 커밋 / 무시하고 계속]를 사용자에게 그대로 제시하고 답을 기다린다.)
 
    `EnterWorktree` 로 진입한 뒤에는 `pwd` 로 위치를 확인하고, 이후 모든 경로를 그
    worktree 기준으로 쓴다. 진입에 실패하면 사용자에게 `cd <경로> && claude` 로 새
@@ -64,6 +70,13 @@ worktree 안으로 들어온 뒤 `.claude/agents/step-validator.md` 가 있는�
 `.claude/` 는 main 을 가리키는 심볼릭 링크이므로, 없다면 그 파일이 **git 에 커밋되지
 않았다는 뜻**이다 (`link_shared.py` 가 `git ls-files` 로 공유 목록을 뽑는다). 같은 이유로
 `data/genesets/` 나 참조 스킬이 비어 있을 수도 있으니, 없는 것은 없다고 알린다.
+
+Python 실행 환경도 `.venv/` 로 main 과 공유된다 (worktree_init.sh 가 별도 블록에서 심볼릭
+링크로 건다 — git 추적 대상이 아니라 위 `link_shared.py` 목록에는 없다). 분석 코드는
+`.venv/bin/python`(또는 그 안의 `pip show scanpy` 등)으로 scanpy·decoupler·celltypist 같은
+패키지가 있는지 먼저 확인하고, 있으면 그 인터프리터로 실행한다. `.venv/` 가 아예 없거나
+패키지가 비어 있으면 그것도 없다고 알린다 — 대신 새 가상환경을 만들어 설치하지 않는다
+(다른 실험과 실행 환경이 달라지면 결과 차이의 원인을 알 수 없게 된다).
 
 ## 1. Task / Objective / Dataset / Path 를 채운다
 

@@ -96,7 +96,7 @@ skill을 작성하거나 분석 결과에 대한 근거를 설명할 때는 항�
 
 작업 범위는 이 작업 트리 안으로 제한한다. 다른 실험의 디렉토리를 읽거나 쓰지 않고, worktrees/나 comparison/을 만들지 않는다. 다른 실험이 무엇을 하고 있는지 궁금하더라도 들여다보지 않는다. 실험 사이의 독립성이 비교의 전제다.
 
-이 작업 트리 안에서 심볼릭 링크로 걸린 경로는 main과 공유되는 공용 파일이다. data/raw/, data/genesets/, mcp_lab/, .devcontainer/, .claude/, core_markers.xlsx, setup.sh·status.sh·cleanup.sh·verify.py·fetch_genesets.py·link_shared.py·metrics_template.json가 여기에 해당한다. 읽기만 하고 쓰거나 지우거나 이름을 바꾸지 않는다. 링크를 통해 쓰면 main과 다른 실험의 파일까지 함께 바뀐다. 어떤 경로가 링크인지 확실하지 않으면 ls -l로 확인한다.
+이 작업 트리 안에서 심볼릭 링크로 걸린 경로는 main과 공유되는 공용 파일이다. data/raw/, data/genesets/, mcp_lab/, .devcontainer/, .claude/, core_markers.xlsx, setup.sh·status.sh·cleanup.sh·verify.py·fetch_genesets.py·link_shared.py·metrics_template.json, .venv/가 여기에 해당한다. 읽기만 하고 쓰거나 지우거나 이름을 바꾸지 않는다. 링크를 통해 쓰면 main과 다른 실험의 파일까지 함께 바뀐다. 어떤 경로가 링크인지 확실하지 않으면 ls -l로 확인한다. .venv/는 다른 경로들과 달리 git 이 추적하지 않는 gitignore 대상이라 link_shared.py 목록이 아니라 worktree_init.sh 가 별도 블록에서 심볼릭 링크로 건다 — 실험마다 패키지를 새로 설치하지 않고 main의 Python 환경을 그대로 쓴다.
 
 data/processed/는 공유하지 않는다. 이 작업 트리만의 실물 디렉토리이므로 분석 중간 데이터는 평소대로 여기에 쓴다.
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """기능 분석에 쓸 prior knowledge 를 data/genesets/ 에 내려받아 캐시한다.
 
-    python3 parallel_lab/fetch_genesets.py             # 전부
-    python3 parallel_lab/fetch_genesets.py hallmark    # 하나만
-    python3 parallel_lab/fetch_genesets.py --force     # 이미 있어도 다시 받음
-    python3 parallel_lab/fetch_genesets.py --list      # 무엇을 받는지만 보여줌
+    python3 fetch_genesets.py             # 전부
+    python3 fetch_genesets.py hallmark    # 하나만
+    python3 fetch_genesets.py --force     # 이미 있어도 다시 받음
+    python3 fetch_genesets.py --list      # 무엇을 받는지만 보여줌
 
 왜 캐시하나
   dc.op.* 는 부를 때마다 omnipathdb.org 에 요청을 보낸다. 수강생 스무 명이 동시에
@@ -281,7 +281,7 @@ def main(argv: list[str]) -> int:
         return 1
 
     print()
-    print("다음:  python3 parallel_lab/verify.py")
+    print("다음:  python3 verify.py")
     return 0
 
 

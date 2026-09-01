@@ -2,7 +2,7 @@
 """
 기능 분석 실습 환경 점검 — 시작 전에 한 번 돌리세요.
 
-    python3 parallel_lab/verify.py
+    python3 verify.py
 
 패키지 · gene set 캐시 · 입력 데이터를 봅니다.
 분석 결과는 검사하지 않습니다.
@@ -62,7 +62,7 @@ def main() -> int:
         major = int(str(ver).split(".")[0]) if str(ver)[0].isdigit() else 0
         check("decoupler 2.x", major >= 2, f"v{ver}" + ("" if major >= 2 else "  ← 1.x 입니다"),
               "pip install -U 'decoupler>=2.2,<3'  "
-              "(1.x 는 함수 이름이 전부 다릅니다 — parallel_lab/CHEATSHEET.md 1번 표)")
+              "(1.x 는 함수 이름이 전부 다릅니다 — decoupler-cheatsheet 스킬 1번 표)")
         if major >= 2:
             check("  dc.op / dc.mt / dc.pp 모듈",
                   all(hasattr(dc, m) for m in ("op", "mt", "pp", "pl", "tl")),
@@ -97,7 +97,7 @@ def main() -> int:
         if gsdir.is_dir() else []
     check("gene set 캐시", bool(cached),
           ", ".join(cached) if cached else "비어 있음",
-          "python3 parallel_lab/fetch_genesets.py")
+          "python3 fetch_genesets.py")
 
     for name in cached:
         info = manifest.get(name, {})
@@ -112,7 +112,7 @@ def main() -> int:
     missing = [n for n in ("hallmark", "reactome", "progeny", "collectri") if n not in cached]
     if missing:
         check(f"  아직 안 받은 것: {', '.join(missing)}", False, "",
-              f"python3 parallel_lab/fetch_genesets.py {' '.join(missing)}",
+              f"python3 fetch_genesets.py {' '.join(missing)}",
               warn_only=True)
 
     # --- 입력 데이터 ----------------------------------------------------
@@ -147,7 +147,7 @@ def main() -> int:
         print()
         return 1
 
-    print("✅ 준비 완료 — parallel_lab/LAB.md 를 여세요.")
+    print("✅ 준비 완료 — decoupler-cheatsheet 스킬을 확인하세요.")
     if warns:
         print("\n  (아래는 없어도 진행할 수 있습니다)")
         for w in warns:

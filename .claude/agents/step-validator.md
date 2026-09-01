@@ -114,15 +114,24 @@ tools: Read, Grep, Glob, Bash
 
 ### 배치 통합 — 이 분석에서 가장 위험한 단계
 
-- **`stim` 은 배치가 아니라 관심 조건이다.** 이것을 `batch_key` 로 보정하는 것은
-  보려는 신호를 지우는 방향이라는 점을 인지한 기록이 있는가
+- **이 분석의 목적은 celltype 별 IFN-beta 반응을 보는 것이다.** clustering·annotation 을
+  위해서는 `stim` 을 `batch_key` 로 넣어 조건에 따른 표현형 이동을 보정하는 것이 맞는
+  선택이다 — 그래야 `stim`/`ctrl` 세포가 같은 celltype 으로 함께 클러스터링되어 주석이
+  가능해진다. 반대로 **차등발현·기능 분석 단계에서 `stim` 을 batch_key 로 넣어 지워버렸다면
+  그것이 오류다** — 거기서는 `stim` 이 검정하려는 관심 변수이기 때문이다.
+  이 단계가 clustering/annotation 목적인지 확인하고, 그 목적에 맞는 선택인지를 본다
 - 보정 **전과 후** UMAP 이 둘 다 있는가
 - IFN 반응 유전자(ISG15, IFI6, ISG20, MX1, IFIT1 등)의 `stim`/`ctrl` 발현 차이를
   보정 전후로 **수치 표**로 남겼는가. 그림만 있으면 완결성 3 이하다
-- 보정 후 `stim`/`ctrl` 세포가 지나치게 완전히 섞이지 않았는가
-- `obs` 에 donor/lane 같은 **진짜 배치 변수**가 있는데 그것을 두고 `stim` 을 보정한 것은 아닌가
+- 보정 후 `stim`/`ctrl` 세포가 같은 celltype 끼리 잘 섞였는가 (clustering/annotation 목적에
+  부합). 세포 타입 구조 자체가 사라질 정도로 과보정된 것은 아닌가
+- `obs` 에 donor/lane 같은 **진짜 배치 변수**가 있다면 `stim` 과 함께 `batch_key` 에
+  포함되었는가. donor/lane 을 두고 `stim` 만 보정한 것은 아닌가
 - Harmony 를 썼다면 이후 `neighbors` 가 **보정된 표현형**(`X_pca_harmony`) 위에서
   만들어졌는가. 보정해 놓고 `X_pca` 로 넘어갔다면 정확성 2 이하다
+- **뒤 단계(차등발현·기능 분석)가 이 보정된 임베딩이 아니라 log-normalized 발현을
+  입력으로 쓰는지** 이 단계에서 미리 확인한다. 배치 보정은 clustering/annotation 전용이며
+  조건 비교의 입력이 되어서는 안 된다
 
 ### Clustering
 
@@ -219,7 +228,7 @@ IFN-beta 자극이므로 인터페론 반응이 상위에 있어야 한다.
 
 ### 마무리
 
-- `metrics.json` 이 `parallel_lab/metrics_template.json` 의 키 이름을 지켰는가
+- `metrics.json` 이 저장소 루트 `metrics_template.json` 의 키 이름을 지켰는가
 - 기능 분석을 했다면 `functional` 블록의 `readout` · `prior_knowledge` · `method` ·
   `positive_control` 이 채워졌는가. `versions` 가 실측값인가
 - 리포트에 **방법·QC 부록**이 있는가 — 임계값 파라미터 표, 패키지 버전,

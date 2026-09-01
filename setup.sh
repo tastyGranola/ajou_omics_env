@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # 병렬 실험용 git worktree 를 만든다.
 #
-#   bash parallel_lab/setup.sh                 # 2일차 2교시 기본 실험 두 개
-#   bash parallel_lab/setup.sh harmony scvi    # 임의의 아이디어 이름으로 N 개
+#   bash setup.sh                 # 기본 실험 두 개 (plan-execute · stepwise-hitl)
+#   bash setup.sh harmony scvi    # 임의의 아이디어 이름으로 N 개
 #
 # 옵션
 #   --ignore-dirty   커밋되지 않은 변경이 있어도 진행한다
 set -euo pipefail
 
 # 항상 main 작업 트리를 기준으로 동작한다.
-# parallel_lab/ 은 각 worktree 에도 링크되어 있어서, 스크립트 위치로 루트를 잡으면
-# worktree 안에서 실행했을 때 자기 자신을 루트로 착각한다.
+# 이 스크립트 자체는 worktree 에 링크되지 않지만, 실행 위치가 worktree 안일 수 있으므로
+# 스크립트 위치가 아니라 git worktree 목록에서 루트를 잡는다.
 ROOT="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
 if [ -z "$ROOT" ] || [ ! -d "$ROOT/.git" ]; then
   echo "✗ git 저장소 안에서 실행하세요." >&2
@@ -25,11 +25,13 @@ fi
 # main 과 공유할 것 — 실험이 만들지 않고 읽기만 하는 공용 입력·도구.
 # 이 경로들은 복사하지 않고 main 을 가리키는 심볼릭 링크로 건다.
 # data/processed/ 는 분석 중간 데이터가 쌓이는 곳이라 공유하지 않는다 (실험마다 따로).
-# .claude/agents/ 는 검증 에이전트다. 실험마다 다르면 검증 기준이 달라져 비교가 깨지므로 공유한다.
+# .claude/ 는 검증 에이전트·스킬이다. 실험마다 다르면 검증 기준이 달라져 비교가 깨지므로 공유한다.
 # data/genesets/ 는 기능 분석의 prior knowledge 캐시다. 실험마다 다른 gene set 을 받으면
 #   "gene set 을 바꿨더니 결과가 달라졌다" 를 말할 수 없으므로 공유한다.
 #   ★ git 에 커밋되어 있어야 링크가 걸린다 (link_shared.py 가 git ls-files 를 쓴다).
-SHARED=(data/raw data/genesets mcp_lab parallel_lab .devcontainer .claude/agents core_markers.xlsx)
+SHARED=(data/raw data/genesets mcp_lab .devcontainer .claude core_markers.xlsx
+        setup.sh status.sh cleanup.sh verify.py fetch_genesets.py link_shared.py
+        metrics_template.json)
 
 IGNORE_DIRTY=0
 NAMES=()
@@ -61,9 +63,9 @@ if [ -n "$DIRTY" ] && [ "$IGNORE_DIRTY" -eq 0 ]; then
   echo "  둘 중 하나를 고르세요."
   echo "    1) 지금 상태를 실험의 출발점으로 삼는다"
   echo "         git add -A && git commit -m '병렬 실험 출발점'"
-  echo "         bash parallel_lab/setup.sh"
+  echo "         bash setup.sh"
   echo "    2) 마지막 커밋을 출발점으로 삼고 위 변경은 main 에만 둔다"
-  echo "         bash parallel_lab/setup.sh --ignore-dirty"
+  echo "         bash setup.sh --ignore-dirty"
   exit 1
 fi
 
@@ -143,9 +145,9 @@ for NAME in "${NAMES[@]}"; do
   #   skip-worktree    공유 경로를 "작업 트리에서 신경 쓰지 마라" 로 표시
   #   checkout-index   나머지만 실제로 꺼낸다
   git -C "$DIR" read-tree HEAD
-  python3 "$ROOT/parallel_lab/link_shared.py" "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
+  python3 "$ROOT/link_shared.py" "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
   git -C "$DIR" checkout-index -a
-  python3 "$ROOT/parallel_lab/link_shared.py" --link "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
+  python3 "$ROOT/link_shared.py" --link "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
   echo "✓ $DIR   ($NOTE)"
 
   # CLAUDE.md — 공통 지침 + 이 실험의 진행 방식
@@ -216,5 +218,5 @@ for NAME in "${NAMES[@]}"; do
   echo "    cd $ROOT/worktrees/$NAME && claude"
 done
 echo
-echo "여는 프롬프트는 parallel_lab/prompts/ 에 있습니다."
-echo "진행 상황 확인:  bash parallel_lab/status.sh"
+echo "각 worktree 에서 claude 를 띄운 뒤 /scrnaseq-plan-execute 또는 /scrnaseq-stepwise-hitl 을 쓰세요."
+echo "진행 상황 확인:  bash status.sh"

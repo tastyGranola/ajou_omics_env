@@ -93,7 +93,14 @@ data/processed/         전처리된 실습용 h5ad
 notebooks/              실습 노트북
 scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크립트
 mcp_lab/                2일차 1교시 MCP 실습 (LAB.md 부터 보세요)
-parallel_lab/           2일차 2교시 병렬 실험 실습 (LAB.md 부터 보세요)
+.claude/skills/         scRNA-seq 분석·비교 스킬 (scrnaseq-plan-execute 등)
+.claude/agents/         step-validator — 단계별 채점 서브에이전트
+setup.sh                병렬 실험용 worktree 생성
+status.sh               병렬 실험 진행 상황 표
+cleanup.sh              worktree 정리
+verify.py               환경 점검 (패키지 · gene set 캐시 · 입력 데이터)
+fetch_genesets.py       gene set · footprint 를 data/genesets/ 에 캐시
+metrics_template.json   실험 간 비교용 metrics.json 스키마
 worktrees/              병렬 실험용 worktree — setup.sh 가 만듭니다 (git 추적 안 함)
 comparison/             여러 실험을 비교한 결과
 CLAUDE.example.md       Claude Code 용 프로젝트 지침 — cp CLAUDE.example.md CLAUDE.md
@@ -110,47 +117,51 @@ python3 mcp_lab/verify.py     # 환경 점검 (Codespace 생성 시 이미 한 �
 안내서는 [mcp_lab/LAB.md](mcp_lab/LAB.md) 입니다.
 안 될 때는 `bash mcp_lab/doctor.sh` 로 진단합니다.
 
-## 2일차 2교시 — 병렬 실험 실습
+## 병렬 실험 — 같은 질문을 서로 다른 진행 방식으로
 
-한 연구 질문을 두고 **서로 다른 진행 방식 두 가지를 동시에** 돌려 보고 비교합니다.
-`git worktree` 로 branch 마다 작업 폴더를 따로 만들어, 두 Claude 세션이 같은
+한 연구 질문을 두고 **서로 다른 진행 방식을 동시에** 돌려 보고 비교할 수 있습니다.
+`git worktree` 로 branch 마다 작업 폴더를 따로 만들어, 여러 Claude 세션이 같은
 저장소에서 서로 부딪히지 않고 나란히 분석합니다.
 
-| | 실험 | branch | 진행 방식 |
-|---|---|---|---|
-| **A** | `plan-execute` | `exp/plan-execute` | 계획을 먼저 세우고 승인 후 끝까지 자율 실행 |
-| **B** | `stepwise-hitl` | `exp/stepwise-hitl` | 한 단계씩 가고 갈림길마다 사람에게 물음 |
+분석 자체는 `.claude/skills/` 의 스킬로 시작합니다 — 프롬프트를 복사-붙여넣기 하지 않습니다.
+
+| 스킬 | 진행 방식 |
+|---|---|
+| `scrnaseq-plan-execute` | 계획을 먼저 세우고 승인 후 끝까지 자율 실행 |
+| `scrnaseq-stepwise-hitl` | 한 단계씩 가고 갈림길마다 사람에게 물음 |
+| `scrnaseq-compare-experiments` | worktrees/ 아래 여러 실험을 비교 (저장소 루트에서 실행) |
 
 ```bash
 git add -A && git commit -m "병렬 실험 출발점"
-bash parallel_lab/setup.sh      # worktrees/ 아래 실험 두 개 생성
-bash parallel_lab/status.sh     # 두 실험 상태를 한 표로
-bash parallel_lab/cleanup.sh    # 정리
+bash setup.sh      # worktrees/ 아래 실험 두 개 생성 (plan-execute · stepwise-hitl)
+bash status.sh     # 실험 상태를 한 표로
+bash cleanup.sh    # 정리
 ```
 
-공용 입력(`data/raw/`, `data/genesets/`, `mcp_lab/`, `core_markers.xlsx` 등)은 복사하지 않고 main 을
-가리키는 심볼릭 링크로 걸립니다. 실험이 **만드는** 것(`scripts/`, `data/processed/`,
-`results/`, `figures/`)만 worktree 마다 따로 생깁니다 — worktree 하나당 약 17MB.
+공용 입력(`data/raw/`, `data/genesets/`, `mcp_lab/`, `core_markers.xlsx`, `.claude/` 등)은
+복사하지 않고 main 을 가리키는 심볼릭 링크로 걸립니다. 실험이 **만드는** 것(`scripts/`,
+`data/processed/`, `results/`, `figures/`)만 worktree 마다 따로 생깁니다 — worktree 하나당 약 17MB.
 
 `setup.sh` 는 이름을 주면 그대로 실험을 만듭니다. 시험해 보고 싶은 아이디어가
 셋이면 셋을 동시에 돌릴 수 있습니다.
 
 ```bash
-bash parallel_lab/setup.sh harmony-integration scvi-integration no-integration
+bash setup.sh harmony-integration scvi-integration no-integration
 ```
 
-안내서는 [parallel_lab/LAB.md](parallel_lab/LAB.md) 입니다.
+각 worktree 에서 `claude` 를 띄운 뒤 `/scrnaseq-plan-execute` 나 `/scrnaseq-stepwise-hitl` 을
+부르면 됩니다. 실험이 끝나면 저장소 루트에서 `/scrnaseq-compare-experiments` 로 비교합니다.
 
 ### 분석 범위 — 기능 분석까지 갑니다
 
-두 실험이 도는 분석은 QC → 클러스터링 → 주석 → 차등발현에서 끝나지 않고,
+이 분석은 QC → 클러스터링 → 주석 → 차등발현에서 끝나지 않고,
 **조건 간 기능 분석(경로 · 전사인자 활성)** 까지 갑니다. 내용은
 [sc-best-practices 의 Gene set enrichment and pathway analysis](https://www.sc-best-practices.org/conditions/gsea-pathway/)
 챕터를 따랐습니다.
 
 ```bash
-python3 parallel_lab/verify.py            # 패키지 · gene set 캐시 · 입력 데이터 점검
-python3 parallel_lab/fetch_genesets.py    # gene set 을 data/genesets/ 에 캐시 (최초 1회)
+python3 verify.py            # 패키지 · gene set 캐시 · 입력 데이터 점검
+python3 fetch_genesets.py    # gene set 을 data/genesets/ 에 캐시 (최초 1회)
 ```
 
 | | |
@@ -162,7 +173,7 @@ python3 parallel_lab/fetch_genesets.py    # gene set 을 data/genesets/ 에 캐�
 
 > **decoupler 는 2.0 에서 API 가 전면 개편되었습니다** (`dc.run_ulm` → `dc.mt.ulm`).
 > LLM 이 학습한 코드 대부분은 1.x 라 Claude 가 옛 함수를 쓸 가능성이 높습니다.
-> 대응표가 [parallel_lab/CHEATSHEET.md](parallel_lab/CHEATSHEET.md) 맨 앞에 있습니다.
+> 대응표는 `.claude/skills/decoupler-cheatsheet/SKILL.md` 맨 앞에 있습니다.
 > 이미 만들어 둔 Codespace 는 `pip install -U 'decoupler>=2.2,<3' 'pydeseq2>=0.5,<1'` 를 한 번 실행하세요.
 
 ## 설치되는 주요 패키지

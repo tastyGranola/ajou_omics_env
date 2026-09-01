@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # 항상 main 작업 트리를 기준으로 동작한다.
-# parallel_lab/ 은 각 worktree 에도 링크되어 있어서, 스크립트 위치로 루트를 잡으면
+# 이 스크립트 자체는 worktree 에 링크되지 않지만, 실행 위치가 worktree 안일 수 있으므로
 # worktree 안에서 실행했을 때 자기 자신을 루트로 착각한다.
 ROOT="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
 if [ -z "$ROOT" ] || [ ! -d "$ROOT/.git" ]; then
@@ -17,7 +17,7 @@ if [ "$HERE" != "$ROOT" ] && [ "${HERE#$ROOT/worktrees/}" != "$HERE" ]; then
 fi
 
 if [ ! -d worktrees ]; then
-  echo "worktrees/ 가 없습니다. 먼저 bash parallel_lab/setup.sh 를 실행하세요."
+  echo "worktrees/ 가 없습니다. 먼저 bash setup.sh 를 실행하세요."
   exit 0
 fi
 

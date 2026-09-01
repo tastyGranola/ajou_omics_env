@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # 병렬 실험 worktree 와 branch 를 정리한다.
 #
-#   bash parallel_lab/cleanup.sh          # 무엇이 지워지는지 보여주기만 한다
-#   bash parallel_lab/cleanup.sh --yes    # 실제로 지운다
+#   bash cleanup.sh          # 무엇이 지워지는지 보여주기만 한다
+#   bash cleanup.sh --yes    # 실제로 지운다
 #
 # 주의 — worktree 를 지우면 그 안의 results/ figures/ 도 함께 사라집니다.
 #        남기고 싶은 것은 먼저 comparison/ 으로 복사하세요.
 set -euo pipefail
 
 # 항상 main 작업 트리를 기준으로 동작한다.
-# parallel_lab/ 은 각 worktree 에도 링크되어 있어서, 스크립트 위치로 루트를 잡으면
+# 이 스크립트 자체는 worktree 에 링크되지 않지만, 실행 위치가 worktree 안일 수 있으므로
 # worktree 안에서 실행했을 때 자기 자신을 루트로 착각한다.
 ROOT="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
 if [ -z "$ROOT" ] || [ ! -d "$ROOT/.git" ]; then
@@ -55,7 +55,7 @@ echo "comparison/ 은 지우지 않습니다."
 
 if [ "$YES" -eq 0 ]; then
   echo
-  echo "실제로 지우려면:  bash parallel_lab/cleanup.sh --yes"
+  echo "실제로 지우려면:  bash cleanup.sh --yes"
   exit 0
 fi
 

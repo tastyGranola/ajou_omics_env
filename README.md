@@ -95,13 +95,14 @@ scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크�
 mcp_lab/                2일차 1교시 MCP 실습 (LAB.md 부터 보세요)
 .claude/skills/         scRNA-seq 분석·비교 스킬 (scrnaseq-plan-execute 등)
 .claude/agents/         step-validator — 단계별 채점 서브에이전트
-setup.sh                병렬 실험용 worktree 생성
+.claude/scripts/        worktree_init.sh — 실험 worktree 세팅 (스킬이 부릅니다)
+setup.sh                실험 worktree 를 이름 목록으로 여러 개 미리 생성
 status.sh               병렬 실험 진행 상황 표
 cleanup.sh              worktree 정리
 verify.py               환경 점검 (패키지 · gene set 캐시 · 입력 데이터)
 fetch_genesets.py       gene set · footprint 를 data/genesets/ 에 캐시
 metrics_template.json   실험 간 비교용 metrics.json 스키마
-worktrees/              병렬 실험용 worktree — setup.sh 가 만듭니다 (git 추적 안 함)
+worktrees/              병렬 실험용 worktree — 스킬이 알아서 만듭니다 (git 추적 안 함)
 comparison/             여러 실험을 비교한 결과
 CLAUDE.example.md       Claude Code 용 프로젝트 지침 — cp CLAUDE.example.md CLAUDE.md
 ```
@@ -131,9 +132,20 @@ python3 mcp_lab/verify.py     # 환경 점검 (Codespace 생성 시 이미 한 �
 | `scrnaseq-stepwise-hitl` | 한 단계씩 가고 갈림길마다 사람에게 물음 |
 | `scrnaseq-compare-experiments` | worktrees/ 아래 여러 실험을 비교 (저장소 루트에서 실행) |
 
+**worktree 를 직접 만들지 않습니다.** 스킬이 자기 실험용 worktree 를 만들고 그 안으로
+들어갑니다. 터미널 두 개를 열고 각각 **저장소 루트**에서 `claude` 를 띄운 뒤, 한쪽에서
+`/scrnaseq-plan-execute` 를, 다른 쪽에서 `/scrnaseq-stepwise-hitl` 을 부르면 됩니다.
+
 ```bash
-git add -A && git commit -m "병렬 실험 출발점"
-bash setup.sh      # worktrees/ 아래 실험 두 개 생성 (plan-execute · stepwise-hitl)
+git add -A && git commit -m "병렬 실험 출발점"   # worktree 는 마지막 커밋에서 갈라집니다
+claude                                          # 그 다음 /scrnaseq-plan-execute
+```
+
+스킬은 연구 질문을 먼저 받고 → `worktrees/<실험이름>/` 을 만들고 → 그 안으로 세션을
+옮긴 뒤 분석을 시작합니다. 커밋되지 않은 변경이 있으면 지금 커밋할지 마지막 커밋에서
+갈라질지 물어봅니다.
+
+```bash
 bash status.sh     # 실험 상태를 한 표로
 bash cleanup.sh    # 정리
 ```
@@ -141,16 +153,18 @@ bash cleanup.sh    # 정리
 공용 입력(`data/raw/`, `data/genesets/`, `mcp_lab/`, `core_markers.xlsx`, `.claude/` 등)은
 복사하지 않고 main 을 가리키는 심볼릭 링크로 걸립니다. 실험이 **만드는** 것(`scripts/`,
 `data/processed/`, `results/`, `figures/`)만 worktree 마다 따로 생깁니다 — worktree 하나당 약 17MB.
+무엇을 공유하고 무엇을 따로 둘지는 `.claude/scripts/worktree_init.sh` 의 `SHARED` 목록에
+한 곳으로 모여 있습니다.
 
-`setup.sh` 는 이름을 주면 그대로 실험을 만듭니다. 시험해 보고 싶은 아이디어가
-셋이면 셋을 동시에 돌릴 수 있습니다.
+시험해 보고 싶은 아이디어가 셋 이상이면 `setup.sh` 로 미리 깔아 둘 수 있습니다.
+이때는 만들어진 worktree 에서 각각 `claude` 를 띄웁니다.
 
 ```bash
 bash setup.sh harmony-integration scvi-integration no-integration
+cd worktrees/harmony-integration && claude
 ```
 
-각 worktree 에서 `claude` 를 띄운 뒤 `/scrnaseq-plan-execute` 나 `/scrnaseq-stepwise-hitl` 을
-부르면 됩니다. 실험이 끝나면 저장소 루트에서 `/scrnaseq-compare-experiments` 로 비교합니다.
+실험이 끝나면 저장소 루트에서 `/scrnaseq-compare-experiments` 로 비교합니다.
 
 ### 분석 범위 — 기능 분석까지 갑니다
 

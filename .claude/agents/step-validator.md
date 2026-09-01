@@ -12,6 +12,10 @@ tools: Read, Grep, Glob, Bash
 채점 방식은 Biomni 논문 보충자료(Science 393, eadz4351) Table S32–S33 의 완결성·정확성
 루브릭과 Section I 의 블라인드 평가 절차를 단일세포 분석에 옮긴 것이다.
 
+annotation·DEG 단계의 그림 규격(celltypist 사용, dotplot 구성, celltype DEG 패널과
+조건 DEG 패널의 임베딩 구분 등)은 `scrnaseq-visualization-spec` 스킬에 정의되어 있다.
+아래 채점표의 관련 항목은 이 스킬을 기준으로 삼는다 — 필요하면 Read 로 열어 확인한다.
+
 ## 지켜야 할 것
 
 파일을 만들거나 고치거나 지우지 않는다. `Bash` 는 읽기와 계산에만 쓴다. `.h5ad` 를 열어
@@ -143,13 +147,32 @@ tools: Read, Grep, Glob, Bash
 
 ### Annotation
 
+- **celltypist 로 수행했는가.** marker positive/negative 점수 최댓값 할당 방식으로
+  되돌아갔다면 `scrnaseq-visualization-spec` 스킬의 규격 위반이다 — celltypist 를 못
+  쓰는 이유(비인간 종, 부적절한 모델 등)가 결정 로그에 명시된 경우만 예외로 허용한다
+- **사용한 celltypist 모델 이름·버전이 기록되어 있는가.** `annotation_summary.json` 이나
+  결정 로그에 없으면 완결성 3 이하다
+- 세포 단위 예측을 그대로 쓰지 않고 cluster 단위 다수결(majority voting)로 배정했는가.
+  같은 클러스터 안에서 라벨이 흔들렸다면 그 사실이 기록되어 있는가
 - 세포 타입 주장마다 marker 근거가 붙어 있는가
-- `core_markers.xlsx` 와 대조했는가. **불일치 항목을 빼놓지 않았는가**
+- `core_markers.xlsx` 같은 참조 파일이 있으면 celltypist 라벨과 대조했는가.
+  **불일치 항목을 빼놓지 않았는가.** 대조 결과로 celltypist 예측을 덮어썼다면 근거가
+  있는가
 - 같은 marker 를 서로 다른 타입의 근거로 중복 사용하지 않았는가
 - 근거가 약한 클러스터에 억지로 이름을 붙이지 않았는가.
   `unassigned` 가 하나도 없다면 오히려 확인해 본다
 - PBMC 에서 기대되는 주요 타입(CD4 T, CD8 T, B, NK, CD14+ Mono, FCGR3A+ Mono, DC)
   중 빠진 것이 있는가. 있다면 왜 없는지 설명되어 있는가
+
+**필수 그림 — `scrnaseq-visualization-spec` 규격**
+
+- 1차 cluster marker dotplot(`figures/annotation/dotplot_core_markers.png` 류)이 있는가
+- 1차 dotplot에서 클러스터 구분이 한눈에 안 보이는데도 2차 축소 dotplot
+  (`dotplot_curated_markers.png` 류, celltype+도메인 지식 기반 marker 1~3개로 축소)이
+  **없다면** 완결성을 깎는다. 1차만으로 클러스터마다 뚜렷한 marker가 식별되면 2차는
+  없어도 된다 — 이 판단 근거가 기록되어 있는지 확인한다
+- 최종적으로 클러스터마다 최소 1개 이상 뚜렷한 marker 가 dotplot 상에서 식별되는가.
+  안 되는 클러스터가 있다면 근거 약한 클러스터로 별도 표시되어 있는가
 
 ### 조건 간 차등발현
 
@@ -160,6 +183,21 @@ tools: Read, Grep, Glob, Bash
 - 세포 수가 적은 타입의 결과에 신뢰도 표시가 있는가
 - padj·log2FC 컷오프가 기록과 일치하고, up/down 의 방향 정의가 명시되어 있는가
 - 상위 유전자에 IFN 반응 유전자가 보이는가. 전혀 안 보이면 앞 단계를 의심한다
+
+**필수 그림 — `scrnaseq-visualization-spec` 규격, 두 패널 세트를 혼동하지 않았는가**
+
+- **Celltype DEG 패널**: 왼쪽이 post-integration(배치 보정 후, `X_pca_harmony` 기반)
+  UMAP + celltype 색, 오른쪽이 celltype marker 를 **scatter plot**(volcano 아님)으로
+  그린 그림이 있는가. 오른쪽이 -log10(padj) 를 축으로 쓰는 볼케이노 형태라면 규격
+  위반이다
+- **조건(ctrl vs stim) DEG 패널**: 왼쪽이 **pre-integration**(배치 보정 전, 원본
+  `X_pca` 기반) UMAP + stim/ctrl 색, 오른쪽이 조건 간 DEG **volcano plot** 인가.
+  왼쪽에 보정된 임베딩(`X_pca_harmony`)을 썼다면 조건이 만드는 이동이 지워지므로
+  정확성을 깎는다
+- 두 패널 세트가 서로 다른 임베딩을 쓴다는 사실이 결정 로그에 기록되어 있는가.
+  없으면 완결성을 깎는다
+- 두 패널의 왼쪽 UMAP 이 뒤바뀌어 있지 않은가(예: celltype DEG 패널에 pre-integration
+  UMAP을 쓰거나 그 반대) — 뒤바뀌었다면 정확성 2 이하다
 
 ### 기능 분석 (GSEA · pathway) — 조건 대비가 가장 위험한 자리
 
@@ -218,6 +256,21 @@ IFN-beta 자극이므로 인터페론 반응이 상위에 있어야 한다.
 - 상위 집합끼리의 중복(Jaccard 등)을 확인한 기록이 있는가
 - `Interferon Signaling` 과 `Interferon Alpha/Beta Signaling` 처럼 유전자가 거의 같은 것을
   서로 다른 발견 두 개로 세지 않았는가. Reactome·GO 를 썼다면 특히 본다
+
+**필수 그림 — `scrnaseq-visualization-spec` 규격**
+
+- **pathway 활성 scatter plot**(비보정 pre-integration UMAP 위에 pathway 별 세포 단위
+  점수를 색으로 얹은 그림, `figures/functional/pathway_scatter_*.png` 류)이 고른 pathway
+  마다 있는가. post-integration(배치 보정된) 임베딩을 썼다면 조건 신호가 지워지므로
+  정확성을 깎는다
+- **ctrl vs stim 을 구분한 stacked violin plot**(`figures/functional/pathway_stacked_violin.png`
+  류)이 있는가. celltype 으로만 묶고 조건을 나누지 않았다면 이 그림의 목적을 못
+  채운 것이므로 완결성을 깎는다
+- 그림에 쓴 pathway 목록과 그 이유(양성 대조 포함 여부), scatter 의 임베딩 선택 이유가
+  결정 로그에 있는가
+- **그림 안 텍스트(제목·축 라벨·범례)에 한글 폰트 깨짐(tofu, 네모 글자)이 없는가.**
+  한글이 들어간 그림이면 어떤 한글 폰트를 지정했는지 결정 로그에 기록이 있는가.
+  영어만 썼다면 이 항목은 통과로 본다
 
 **환경**
 

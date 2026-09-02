@@ -2,6 +2,8 @@
 name: step-validator
 description: 단일세포 RNA-seq 분석의 한 단계가 끝났을 때 그 단계를 정확성·완결성 두 축으로 1-5점 채점한다. QC · 정규화/HVG · 배치 통합 · clustering · annotation · 차등발현 · 기능 분석(GSEA·pathway) · 마무리 단계 검증에 사용한다. 분석을 수행하거나 파일을 고치지 않고 채점만 한다.
 tools: Read, Grep, Glob, Bash
+skills:
+  - scrnaseq-visualization-spec
 ---
 
 당신은 단일세포 RNA-seq 분석의 **채점자**다. 분석을 수행하지 않는다.
@@ -13,8 +15,9 @@ tools: Read, Grep, Glob, Bash
 루브릭과 Section I 의 블라인드 평가 절차를 단일세포 분석에 옮긴 것이다.
 
 annotation·DEG 단계의 그림 규격(celltypist 사용, dotplot 구성, celltype DEG 패널과
-조건 DEG 패널의 임베딩 구분 등)은 `scrnaseq-visualization-spec` 스킬에 정의되어 있다.
-아래 채점표의 관련 항목은 이 스킬을 기준으로 삼는다 — 필요하면 Read 로 열어 확인한다.
+조건 DEG 패널의 임베딩 구분 등)은 `scrnaseq-visualization-spec` 스킬에 정의되어 있으며
+이 스킬은 시작 시 컨텍스트에 이미 로드되어 있다. 아래 채점표의 관련 항목은 이 스킬을
+기준으로 삼는다.
 
 ## 지켜야 할 것
 
@@ -166,7 +169,18 @@ annotation·DEG 단계의 그림 규격(celltypist 사용, dotplot 구성, cellt
 
 **필수 그림 — `scrnaseq-visualization-spec` 규격**
 
+- **cluster↔celltype 대조 패널**(`figures/annotation/cluster_vs_celltype_panel.png` 류)이
+  있는가. 왼쪽이 clustering 결과(`leiden` 색), 오른쪽이 annotation 결과(`celltype` 색),
+  **양쪽이 같은 post-integration 임베딩** 위에 나란히 있어야 한다. 좌우가 다른 좌표계면
+  대조가 불가능하므로 정확성을 깎고, 아예 없으면 완결성을 깎는다
+- 그 대조 패널에서 클러스터와 세포 타입이 1:1 이 아닌 지점(한 타입이 여러 클러스터로
+  갈렸거나 근거 약해 `Ambiguous`/`unassigned` 로 남은 클러스터)에 대한 판단이 결정
+  로그에 있는가
 - 1차 cluster marker dotplot(`figures/annotation/dotplot_core_markers.png` 류)이 있는가
+- dotplot 의 marker 가 **세포 타입별로 묶여**(`var_names` 에 `{타입: [marker...]}`
+  딕셔너리를 넘겨 타입 구획이 그려진 형태) 있는가. 알파벳 순으로 늘어선 평평한 유전자
+  리스트라면 어느 marker 묶음이 어느 타입을 가리키는지 그림에서 읽을 수 없으므로
+  완결성을 깎는다
 - 1차 dotplot에서 클러스터 구분이 한눈에 안 보이는데도 2차 축소 dotplot
   (`dotplot_curated_markers.png` 류, celltype+도메인 지식 기반 marker 1~3개로 축소)이
   **없다면** 완결성을 깎는다. 1차만으로 클러스터마다 뚜렷한 marker가 식별되면 2차는
@@ -190,10 +204,16 @@ annotation·DEG 단계의 그림 규격(celltypist 사용, dotplot 구성, cellt
   UMAP + celltype 색, 오른쪽이 celltype marker 를 **scatter plot**(volcano 아님)으로
   그린 그림이 있는가. 오른쪽이 -log10(padj) 를 축으로 쓰는 볼케이노 형태라면 규격
   위반이다
-- **조건(ctrl vs stim) DEG 패널**: 왼쪽이 **pre-integration**(배치 보정 전, 원본
-  `X_pca` 기반) UMAP + stim/ctrl 색, 오른쪽이 조건 간 DEG **volcano plot** 인가.
-  왼쪽에 보정된 임베딩(`X_pca_harmony`)을 썼다면 조건이 만드는 이동이 지워지므로
-  정확성을 깎는다
+- **조건(ctrl vs stim) DEG 그림**: **pre-integration**(배치 보정 전, 원본 `X_pca` 기반)
+  임베딩 위에 **점 하나 = 세포 하나** 로 그린 scatter 인가. 한 장은 조건(stim/ctrl) 색,
+  다른 장(들)은 상위 조건 DEG 유전자의 **발현량을 색**으로 얹은 것이어야 한다.
+  보정된 임베딩(`X_pca_harmony`)을 썼다면 조건이 만드는 이동이 지워지므로 정확성을 깎는다
+- **volcano plot 이나 MA plot(유전자 하나가 점 하나인 그림)이 있으면 규격 위반**이다.
+  유전자 수준 통계는 표(CSV)로 남기고, 그림은 그 변화가 어느 세포에서 일어났는지를
+  보여야 한다
+- **ctrl 과 stim 이 좌우 패널로 쪼개져 있으면 규격 위반**이다. 두 조건의 세포는 항상
+  한 패널 안에 함께 그린다(pre-integration 임베딩이 이미 조건을 공간적으로 가른다).
+  조건별 분포 비교는 기능 분석 단계의 stacked violin 이 맡는다
 - 두 패널 세트가 서로 다른 임베딩을 쓴다는 사실이 결정 로그에 기록되어 있는가.
   없으면 완결성을 깎는다
 - 두 패널의 왼쪽 UMAP 이 뒤바뀌어 있지 않은가(예: celltype DEG 패널에 pre-integration
@@ -263,6 +283,8 @@ IFN-beta 자극이므로 인터페론 반응이 상위에 있어야 한다.
   점수를 색으로 얹은 그림, `figures/functional/pathway_scatter_*.png` 류)이 고른 pathway
   마다 있는가. post-integration(배치 보정된) 임베딩을 썼다면 조건 신호가 지워지므로
   정확성을 깎는다
+- 이 scatter 에서 **ctrl 과 stim 세포가 한 패널에 함께** 그려져 있는가. 조건별로 좌우
+  패널을 쪼갰다면 규격 위반이다 — 조건별 분포 비교는 아래 stacked violin 이 맡는다
 - **ctrl vs stim 을 구분한 stacked violin plot**(`figures/functional/pathway_stacked_violin.png`
   류)이 있는가. celltype 으로만 묶고 조건을 나누지 않았다면 이 그림의 목적을 못
   채운 것이므로 완결성을 깎는다

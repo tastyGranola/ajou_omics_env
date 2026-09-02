@@ -1,15 +1,15 @@
 """
 MCP 서버가 제대로 뜨는지 Claude 없이 혼자 확인합니다.
 
-    python3 mcp_lab/check.py                    # 내가 만든 meeting.py
-    python3 mcp_lab/check.py mcp_lab/server.py  # 다른 서버
+    python3 agent_lab/check.py                    # 기본: agent_lab/server.py
+    python3 agent_lab/check.py agent_lab/server.py  # 특정 서버
 """
 import asyncio, sys
 from pathlib import Path
 from mcp import ClientSession, StdioServerParameters, stdio_client
 
 ROOT = Path(__file__).resolve().parent.parent
-target = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "mcp_lab" / "meeting.py"
+target = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "agent_lab" / "server.py"
 if not target.is_absolute():
     target = ROOT / target
 
@@ -24,8 +24,8 @@ def show(path: Path) -> str:
 async def main() -> int:
     if not target.exists():
         print(f"\n  파일이 없습니다: {target}")
-        print("  실습 ①에서 아직 안 만드셨다면 정답본을 복사하세요:")
-        print("    cp mcp_lab/reference/meeting.py mcp_lab/meeting.py\n")
+        print("  서버가 망가졌다면 정답본을 복사하세요:")
+        print("    cp agent_lab/reference/server_완성본.py agent_lab/server.py\n")
         return 1
 
     print(f"\n{show(target)} 확인 중...\n")

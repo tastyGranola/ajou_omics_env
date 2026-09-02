@@ -203,13 +203,13 @@ PY
 # 저장소가 마운트된 뒤에만 할 수 있는 일이라 여기에 있다.
 # 점검일 뿐이므로 통과하지 못해도 Codespace 생성은 계속 진행한다.
 echo
-echo "[6/6] MCP 실습 환경 점검"
+echo "[6/6] MCP · SKILL 실습 환경 점검"
 
-if [ -f mcp_lab/verify.py ]; then
-    python3 mcp_lab/verify.py || \
-        echo "   ⚠ 준비되지 않은 항목이 있습니다 — 'bash mcp_lab/doctor.sh' 로 자세히 볼 수 있습니다"
+if [ -f agent_lab/verify.py ]; then
+    python3 agent_lab/verify.py || \
+        echo "   ⚠ 준비되지 않은 항목이 있습니다 — 'bash agent_lab/doctor.sh' 로 자세히 볼 수 있습니다"
 else
-    echo "   · mcp_lab/verify.py 가 없어 건너뜁니다"
+    echo "   · agent_lab/verify.py 가 없어 건너뜁니다"
 fi
 
 
@@ -222,5 +222,5 @@ echo "새 터미널을 열고 다음을 실행하세요:"
 echo
 echo "    claude"
 echo
-echo "MCP 실습(2일차 1교시)은 mcp_lab/LAB.md 를 여세요."
+echo "MCP · SKILL 실습(2일차 1교시)은 agent_lab/LAB.md 를 여세요."
 echo

@@ -92,7 +92,7 @@ data/genesets/          기능 분석용 gene set · footprint 캐시 (fetch_gen
 data/processed/         전처리된 실습용 h5ad
 notebooks/              실습 노트북
 scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크립트
-mcp_lab/                2일차 1교시 MCP 실습 (LAB.md 부터 보세요)
+agent_lab/              2일차 1교시 MCP · SKILL 실습 (LAB.md 부터 보세요)
 .claude/skills/         scRNA-seq 분석·비교 스킬 (scrnaseq-plan-execute 등)
 .claude/agents/         step-validator — 단계별 채점 서브에이전트
 .claude/scripts/        worktree_init.sh — 실험 worktree 세팅 (스킬이 부릅니다)
@@ -107,16 +107,16 @@ comparison/             여러 실험을 비교한 결과
 CLAUDE.example.md       Claude Code 용 프로젝트 지침 — cp CLAUDE.example.md CLAUDE.md
 ```
 
-## 2일차 1교시 — MCP 실습
+## 2일차 1교시 — MCP · SKILL 실습
 
 같은 Codespace 에서 이어집니다. **새로 만들 것이 없습니다.**
 
 ```bash
-python3 mcp_lab/verify.py     # 환경 점검 (Codespace 생성 시 이미 한 번 돕니다)
+python3 agent_lab/verify.py     # 환경 점검 (Codespace 생성 시 이미 한 번 돕니다)
 ```
 
-안내서는 [mcp_lab/LAB.md](mcp_lab/LAB.md) 입니다.
-안 될 때는 `bash mcp_lab/doctor.sh` 로 진단합니다.
+안내서는 [agent_lab/LAB.md](agent_lab/LAB.md) 입니다.
+안 될 때는 `bash agent_lab/doctor.sh` 로 진단합니다.
 
 ## 병렬 실험 — 같은 질문을 서로 다른 진행 방식으로
 
@@ -150,7 +150,7 @@ bash status.sh     # 실험 상태를 한 표로
 bash cleanup.sh    # 정리
 ```
 
-공용 입력(`data/raw/`, `data/genesets/`, `mcp_lab/`, `core_markers.xlsx`, `.claude/` 등)은
+공용 입력(`data/raw/`, `data/genesets/`, `agent_lab/`, `core_markers.xlsx`, `.claude/` 등)은
 복사하지 않고 main 을 가리키는 심볼릭 링크로 걸립니다. 실험이 **만드는** 것(`scripts/`,
 `data/processed/`, `results/`, `figures/`)만 worktree 마다 따로 생깁니다 — worktree 하나당 약 17MB.
 무엇을 공유하고 무엇을 따로 둘지는 `.claude/scripts/worktree_init.sh` 의 `SHARED` 목록에

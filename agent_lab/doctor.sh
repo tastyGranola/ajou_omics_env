@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 코드스페이스에서 Claude Code 가 안 될 때.  bash mcp_lab/doctor.sh
+# 코드스페이스에서 Claude Code 가 안 될 때.  bash agent_lab/doctor.sh
 echo ""
 echo "════════ 1. claude 설치 ════════"
 command -v claude && claude --version 2>&1 | head -1 || echo "✗ PATH 에 claude 없음"
@@ -37,13 +37,18 @@ if python3 -c "import mcp" 2>/dev/null; then
 else
   echo "✗ mcp 없음  →  python3 -m pip install -r .devcontainer/requirements.txt"
 fi
-command -v uvx >/dev/null && echo "✓ uvx = $(command -v uvx)" \
-  || echo "✗ uvx 없음  →  python3 -m pip install uv"
-uv tool list 2>/dev/null | head -3
+echo ""
+echo "════════ 4b. 스킬 설치 도구 (실습 4단계) ════════"
+if command -v gh >/dev/null; then
+  echo "✓ gh = $(gh --version 2>&1 | head -1)  (gh skill 은 2.90+ 필요)"
+else
+  echo "✗ gh 없음  (npx 로 대체 가능)"
+fi
+command -v node >/dev/null && echo "✓ node = $(node --version)" || echo "✗ node 없음  →  npx 경로 불가"
 
 echo ""
 echo "════════ 5. 환경 점검 ════════"
-python3 mcp_lab/verify.py 2>&1 | tail -14
+python3 agent_lab/verify.py 2>&1 | tail -14
 
 echo ""
 echo "════════ 6. Claude Code 설정 ════════"

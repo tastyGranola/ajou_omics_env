@@ -1,5 +1,0 @@
-{
-  "mcpServers": {
-    "meeting": { "type": "stdio", "command": "python3", "args": ["mcp_lab/meeting.py"] }
-  }
-}

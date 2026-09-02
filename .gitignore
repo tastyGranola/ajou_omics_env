@@ -16,6 +16,7 @@ comparison/*
 
 # 개인 설정
 CLAUDE.md
+.claude/settings.local.json
 
 # Python
 __pycache__/
@@ -28,3 +29,16 @@ venv/
 # OS / 편집기
 .DS_Store
 .vscode/settings.json
+
+# 2일차 1교시 실습 (agent_lab) — 실행 중 생성물
+.runs.json
+agent_lab/.runs.json
+
+# 강사 준비 파일 — 학생 배포본에 넣지 않음
+HANDOFF.md
+agent_lab/REHEARSAL.md
+agent_lab/REHEARSAL_LOG.md
+agent_lab/INSTRUCTOR.md
+
+# 편집기 임시 파일
+*.swp

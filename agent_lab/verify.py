@@ -2,11 +2,12 @@
 """
 환경 점검 — 실습 전에 한 번 돌리세요.
 
-    python3 mcp_lab/verify.py
+    python3 agent_lab/verify.py
 
 '환경' 만 봅니다. .mcp.json 은 실습에서 직접 채우므로 검사하지 않습니다.
 """
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -37,6 +38,19 @@ def reachable(url, timeout=8):
         return False
 
 
+def gh_version():
+    """(major, minor) 또는 None."""
+    exe = shutil.which("gh")
+    if not exe:
+        return None
+    try:
+        out = subprocess.run([exe, "--version"], capture_output=True, text=True, timeout=8).stdout
+        m = re.search(r"gh version (\d+)\.(\d+)", out)
+        return (int(m.group(1)), int(m.group(2))) if m else None
+    except Exception:
+        return None
+
+
 def main() -> int:
     print("\n환경 점검\n")
 
@@ -48,20 +62,31 @@ def main() -> int:
         import importlib.metadata as md
         check("mcp 패키지", True, f"v{md.version('mcp')}")
     except Exception:
-        check("mcp 패키지", False, "없음",
-              "python3 -m pip install -r .devcontainer/requirements.txt")
-
-    uvx = shutil.which("uvx")
-    check("uvx  (실습 ③ 용)", uvx is not None, uvx or "없음",
-          "python3 -m pip install uv")
+        check("mcp 패키지", False, "없음", 'python3 -m pip install "mcp[cli]"')
 
     claude = shutil.which("claude")
     check("claude 명령", claude is not None, claude or "PATH 에 없음",
-          "npm install -g @anthropic-ai/claude-code  후 새 터미널")
+          "curl -fsSL https://claude.ai/install.sh | bash  후 새 터미널")
 
-    check("바깥 인터넷 (실습 ③ 용)",
-          reachable("https://biocontext-kb.fastmcp.app/mcp/"), "",
-          "네트워크 정책일 수 있습니다. 실습 ③의 원격 부분은 건너뛰어도 됩니다",
+    # ── 실습 4단계(스킬 설치) 용 — gh 2.90+ 또는 node(npx) 중 하나면 됩니다 ──
+    gv = gh_version()
+    gh_ok = gv is not None and gv >= (2, 90)
+    check("gh 2.90+  (실습 4 · 스킬)", gh_ok,
+          (f"v{gv[0]}.{gv[1]}" if gv else "없음"),
+          "gh 2.90+ 가 있으면 gh skill 을 씁니다. 없으면 아래 node(npx) 로도 됩니다",
+          warn_only=True)
+
+    node = shutil.which("node")
+    check("node / npx  (실습 4 대체 경로)", node is not None, node or "없음",
+          "gh 2.90+ 가 없을 때 'npx skills add …' 로 설치합니다",
+          warn_only=True)
+
+    if not gh_ok and node is None:
+        warns.append("실습 4단계 준비\n      → gh 2.90+ 또는 node 중 하나는 있어야 스킬을 설치합니다")
+
+    check("바깥 인터넷 (실습 3 · OLS)",
+          reachable("https://www.ebi.ac.uk/ols4/api/mcp"), "",
+          "네트워크 정책일 수 있습니다. 실습 3의 원격 부분은 건너뛰어도 됩니다",
           warn_only=True)
 
     env_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -83,7 +108,7 @@ def main() -> int:
             print("  •", f)
         print()
         return 1
-    print("\033[32m준비 완료.  mcp_lab/LAB.md 의 실습 ① 로 가세요.\033[0m\n")
+    print("\033[32m준비 완료.  agent_lab/LAB.md 의 1단계로 가세요.\033[0m\n")
     return 0
 
 

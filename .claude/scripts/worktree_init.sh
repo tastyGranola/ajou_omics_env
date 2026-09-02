@@ -36,7 +36,7 @@ DEFAULT_GOAL="IFN-beta 자극에 대한 PBMC 세포 타입별 반응 차이를 �
 #   ★ git 에 커밋되어 있어야 링크가 걸린다 (link_shared.py 가 git ls-files 를 쓴다).
 # .venv 는 이 목록과 별개다 — .gitignore 대상이라 git ls-files 에 안 잡히므로
 #   link_shared.py 를 못 쓴다. 아래 worktree 생성 이후 별도 블록에서 심볼릭 링크로 건다.
-SHARED=(data/raw data/genesets mcp_lab .devcontainer .claude core_markers.xlsx
+SHARED=(data/raw data/genesets agent_lab .devcontainer .claude core_markers.xlsx
         setup.sh status.sh cleanup.sh verify.py fetch_genesets.py link_shared.py
         metrics_template.json)
 

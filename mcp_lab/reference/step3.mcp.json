@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "meeting":    { "type": "stdio", "command": "python3", "args": ["mcp_lab/meeting.py"] },
-    "sc-omics":   { "type": "stdio", "command": "python3", "args": ["mcp_lab/server.py"] },
-    "fetch":      { "type": "stdio", "command": "uvx", "args": ["mcp-server-fetch"] },
-    "biocontext": { "type": "http",  "url": "https://biocontext-kb.fastmcp.app/mcp/" }
-  }
-}

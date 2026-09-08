@@ -93,7 +93,7 @@ data/processed/         전처리된 실습용 h5ad
 notebooks/              실습 노트북
 scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크립트
 agent_lab/              2일차 1교시 MCP · SKILL 실습 (LAB.md 부터 보세요)
-.claude/skills/         scRNA-seq 분석·비교 스킬 (scrnaseq-plan-execute 등)
+.claude/skills/         scRNA-seq 분석 스킬 (scrnaseq-plan-execute 등)
 .claude/agents/         step-validator — 단계별 채점 서브에이전트
 .claude/scripts/        worktree_init.sh — 실험 worktree 세팅 (스킬이 부릅니다)
 setup.sh                실험 worktree 를 이름 목록으로 여러 개 미리 생성
@@ -101,9 +101,8 @@ status.sh               병렬 실험 진행 상황 표
 cleanup.sh              worktree 정리
 verify.py               환경 점검 (패키지 · gene set 캐시 · 입력 데이터)
 fetch_genesets.py       gene set · footprint 를 data/genesets/ 에 캐시
-metrics_template.json   실험 간 비교용 metrics.json 스키마
+metrics_template.json   실험 요약용 metrics.json 스키마
 worktrees/              병렬 실험용 worktree — 스킬이 알아서 만듭니다 (git 추적 안 함)
-comparison/             여러 실험을 비교한 결과
 CLAUDE.example.md       Claude Code 용 프로젝트 지침 — cp CLAUDE.example.md CLAUDE.md
 ```
 
@@ -120,7 +119,7 @@ python3 agent_lab/verify.py     # 환경 점검 (Codespace 생성 시 이미 한
 
 ## 병렬 실험 — 같은 질문을 서로 다른 진행 방식으로
 
-한 연구 질문을 두고 **서로 다른 진행 방식을 동시에** 돌려 보고 비교할 수 있습니다.
+한 연구 질문을 두고 **서로 다른 진행 방식을 동시에** 돌려 볼 수 있습니다.
 `git worktree` 로 branch 마다 작업 폴더를 따로 만들어, 여러 Claude 세션이 같은
 저장소에서 서로 부딪히지 않고 나란히 분석합니다.
 
@@ -130,7 +129,6 @@ python3 agent_lab/verify.py     # 환경 점검 (Codespace 생성 시 이미 한
 |---|---|
 | `scrnaseq-plan-execute` | 계획을 먼저 세우고 승인 후 끝까지 자율 실행 |
 | `scrnaseq-stepwise-hitl` | 한 단계씩 가고 갈림길마다 사람에게 물음 |
-| `scrnaseq-compare-experiments` | worktrees/ 아래 여러 실험을 비교 (저장소 루트에서 실행) |
 
 **worktree 를 직접 만들지 않습니다.** 스킬이 자기 실험용 worktree 를 만들고 그 안으로
 들어갑니다. 터미널 두 개를 열고 각각 **저장소 루트**에서 `claude` 를 띄운 뒤, 한쪽에서
@@ -163,8 +161,6 @@ bash cleanup.sh    # 정리
 bash setup.sh harmony-integration scvi-integration no-integration
 cd worktrees/harmony-integration && claude
 ```
-
-실험이 끝나면 저장소 루트에서 `/scrnaseq-compare-experiments` 로 비교합니다.
 
 ### 분석 범위 — 기능 분석까지 갑니다
 

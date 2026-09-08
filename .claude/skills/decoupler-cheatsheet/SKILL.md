@@ -249,6 +249,30 @@ score, padj = dc.mt.ulm(data=stat_df, net=progeny)          # footprint 는 ulm
 
 ## 8. 세포 수준 점수
 
+> ⚠ **codespace/컨테이너처럼 메모리가 좁은 환경에서는 `adata.copy()` 로 시작하지 않는다.**
+> 이 환경은 컨테이너 전체 메모리가 ~7.8GB인데 VSCode/Claude 관련 프로세스가 이미 5GB+ 를
+> 쓰고 있어 실제 여유는 **~2GB 안팎**이다. 전체 AnnData(layers·obsp neighbor graph·여러
+> UMAP embedding 포함)를 `adata.copy()` 로 통째로 복제한 뒤 `dc.mt.ulm`/`dc.mt.aucell` 을
+> 돌리면 두 메모리 요구가 겹쳐 커널이 프로세스를 **조용히 SIGKILL** 한다 — 에러도
+> 트레이스백도 없이 그냥 사라진다 (컨테이너엔 dmesg 권한도 없어 OOM 로그도 못 본다).
+>
+> 돌리기 전에 두 단계로 줄인다.
+> 1. `adata.copy()` 대신, 필요한 `obs` 컬럼 몇 개 + `.X` (+ 필요하면 UMAP 좌표)만 골라
+>    **새 AnnData**를 만든다. layers·obsp·불필요한 obsm 은 애초에 들고 오지 않는다.
+> 2. 실제로 쓸 gene set/footprint(`net`)에 들어있는 유전자만 남기도록 `.X` 를 서브셋한다.
+>    Hallmark 4개 + PROGENy 14개처럼 일부만 쓴다면 전체 유전자(1만+개) 중 `net["target"]`
+>    에 있는 것만 남겨도 충분하다 — 이 축소만으로 유전자 수가 수천 개 단위로 줄어든다.
+>
+> ```python
+> genes_needed = sorted(set(net["target"]) & set(adata.var_names))
+> small = ad.AnnData(
+>     X=adata[:, genes_needed].X,
+>     obs=adata.obs[["cell_type", "stim", "donor"]].copy(),
+>     var=adata.var.loc[genes_needed].copy(),
+>     obsm={"X_umap": adata.obsm["X_umap"]},
+> )
+> ```
+
 ```python
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)

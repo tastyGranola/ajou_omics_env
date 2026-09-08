@@ -5,7 +5,7 @@
 #   bash cleanup.sh --yes    # 실제로 지운다
 #
 # 주의 — worktree 를 지우면 그 안의 results/ figures/ 도 함께 사라집니다.
-#        남기고 싶은 것은 먼저 comparison/ 으로 복사하세요.
+#        남기고 싶은 것은 먼저 worktree 밖으로 복사하세요.
 set -euo pipefail
 
 # 항상 main 작업 트리를 기준으로 동작한다.
@@ -50,9 +50,6 @@ for t in "${TARGETS[@]}"; do
   files=$(count_files "$t" || true)
   echo "    $t  (산출물 ${files:-0} 개)  + branch exp/$n"
 done
-echo
-echo "comparison/ 은 지우지 않습니다."
-
 if [ "$YES" -eq 0 ]; then
   echo
   echo "실제로 지우려면:  bash cleanup.sh --yes"

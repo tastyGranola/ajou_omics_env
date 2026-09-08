@@ -31,8 +31,6 @@ single_cell_project/
 │
 ├── worktrees/
 │
-├── comparison/
-│
 └── README.md
 
 이 디렉토리 구조는 프로젝트의 기본적인 조직 원칙을 나타낸다. 파일명, 파일 개수, 분석 스크립트나 노트북의 분할 방식은 고정하지 않는다.
@@ -51,12 +49,11 @@ results/annotation/: marker 분석, cell-type annotation 및 annotation 검증 �
 results/deg/: differential expression 분석 결과.
 results/functional/: gene set enrichment, pathway·transcription factor 활성 추정 등 기능 분석 결과. 어떤 prior knowledge(gene set·footprint)와 어떤 통계 방법을 썼는지를 결과 파일이나 metrics.json에 함께 남긴다. 이 기록이 없으면 결과를 재현할 수 없다.
 results/condition_analysis/: treatment, disease, stimulation 등 condition 간 비교 분석 결과.
-results/summary/: 이 작업 트리 전체의 요약 산출물. metrics.json과 report.html이 여기에 놓인다. 다른 실험과 비교할 때 읽는 위치이므로 파일명을 임의로 바꾸지 않는다.
+results/summary/: 이 작업 트리 전체의 요약 산출물. metrics.json과 report.html이 여기에 놓인다. 이 실험의 결과를 바깥에서 읽는 위치이므로 파일명을 임의로 바꾸지 않는다.
 figures/: 분석 과정에서 생성한 주요 시각화. 필요한 경우 목적에 맞는 하위 디렉토리를 자유롭게 추가한다.
 config/: 분석 파라미터나 설정 파일이 필요한 경우 사용한다.
 EXPERIMENT.md: 이 작업 트리가 하나의 실험일 때만 존재한다. 실험의 아이디어, 진행 방식, 결정 로그를 담는다.
 worktrees/: 병렬 실험용 git worktree가 놓이는 자리. main 작업 트리에만 존재하며 git으로 추적하지 않는다.
-comparison/: 여러 실험을 비교한 결과. main 작업 트리에서만 생성한다.
 README.md: 데이터, 분석 목적, 주요 분석 과정과 결과를 설명한다.
 
 새로운 분석 단계가 필요하면 기존 구조에 억지로 맞추지 말고 적절한 디렉토리나 하위 디렉토리를 추가할 수 있다.
@@ -86,7 +83,7 @@ skill을 작성하거나 분석 결과에 대한 근거를 설명할 때는 항�
 
 ## 병렬 실험 (git worktree)
 
-하나의 연구 목표에 대해 서로 다른 아이디어나 진행 방식을 동시에 시험하기 위해, 각 실험을 별도의 branch와 git worktree에서 독립적으로 수행하고 마지막에 비교한다.
+하나의 연구 목표에 대해 서로 다른 아이디어나 진행 방식을 동시에 시험하기 위해, 각 실험을 별도의 branch와 git worktree에서 독립적으로 수행한다.
 
 ### 지금 어느 작업 트리에 있는지 먼저 판단한다
 
@@ -94,7 +91,7 @@ skill을 작성하거나 분석 결과에 대한 근거를 설명할 때는 항�
 
 ### 실험 작업 트리에서 지키는 것
 
-작업 범위는 이 작업 트리 안으로 제한한다. 다른 실험의 디렉토리를 읽거나 쓰지 않고, worktrees/나 comparison/을 만들지 않는다. 다른 실험이 무엇을 하고 있는지 궁금하더라도 들여다보지 않는다. 실험 사이의 독립성이 비교의 전제다.
+작업 범위는 이 작업 트리 안으로 제한한다. 다른 실험의 디렉토리를 읽거나 쓰지 않고, worktrees/를 만들지 않는다. 다른 실험이 무엇을 하고 있는지 궁금하더라도 들여다보지 않는다. 실험 사이의 독립성이 병렬 실험의 전제다.
 
 이 작업 트리 안에서 심볼릭 링크로 걸린 경로는 main과 공유되는 공용 파일이다. data/raw/, data/genesets/, agent_lab/, .devcontainer/, .claude/, core_markers.xlsx, setup.sh·status.sh·cleanup.sh·verify.py·fetch_genesets.py·link_shared.py·metrics_template.json, .venv/가 여기에 해당한다. 읽기만 하고 쓰거나 지우거나 이름을 바꾸지 않는다. 링크를 통해 쓰면 main과 다른 실험의 파일까지 함께 바뀐다. 어떤 경로가 링크인지 확실하지 않으면 ls -l로 확인한다. .venv/는 다른 경로들과 달리 git 이 추적하지 않는 gitignore 대상이라 link_shared.py 목록이 아니라 worktree_init.sh 가 별도 블록에서 심볼릭 링크로 건다 — 실험마다 패키지를 새로 설치하지 않고 main의 Python 환경을 그대로 쓴다.
 
@@ -104,16 +101,12 @@ branch를 옮기거나(checkout, switch) merge, rebase, 다른 worktree 제거�
 
 EXPERIMENT.md의 결정 로그를 계속 갱신한다. 분석 과정에서 판단이 갈리는 지점(필터링 기준, 정규화 방식, batch 보정 여부, clustering resolution, marker 선택, 통계 방법 등)을 만날 때마다 무엇을 골랐는지, 왜 골랐는지, 그리고 그 선택을 누가 했는지(claude / human)를 기록한다.
 
-주요 단계가 끝날 때마다 results/summary/metrics.json을 갱신한다. 이 파일은 실험 사이를 비교하기 위한 공통 산출물이므로 정해진 키 이름을 바꾸지 않는다. 필요한 항목은 추가할 수 있지만 기존 키를 삭제하거나 이름을 바꾸지 않는다. 형식은 저장소 루트의 metrics_template.json을 따른다.
+주요 단계가 끝날 때마다 results/summary/metrics.json을 갱신한다. 이 파일은 실험의 진행 상태를 바깥에서 읽기 위한 공통 산출물이므로 정해진 키 이름을 바꾸지 않는다. 필요한 항목은 추가할 수 있지만 기존 키를 삭제하거나 이름을 바꾸지 않는다. 형식은 저장소 루트의 metrics_template.json을 따른다.
 
 같은 목표를 다루더라도 다른 실험의 결과에 맞추려 하지 않는다. 결과가 갈리는 것 자체가 관찰 대상이다.
 
 ### main 작업 트리에서 지키는 것
 
-main에서는 분석을 직접 실행하지 않는다. worktrees/ 아래 각 실험의 EXPERIMENT.md, results/summary/metrics.json, results/, figures/를 읽어 비교하는 일만 한다.
+main에서는 분석을 직접 실행하지 않는다. 분석은 worktrees/ 아래의 실험 작업 트리에서 한다.
 
-비교 결과는 comparison/에 쓴다. 각 실험 작업 트리의 파일은 수정하지 않는다.
-
-비교할 때는 결과만 보지 않는다. 어떤 결정이 결과의 차이를 만들었는지, 그 결정을 누가 했는지(claude / human), 두 실험이 갈라진 지점이 어디인지를 함께 정리한다. 결론을 내리기 어려운 항목은 "어느 쪽이 옳은지 이 데이터로는 판단할 수 없다"고 명시한다.
-
-비교 리포트는 comparison/comparison_report.html로 생성하고, 같은 내용의 요약을 comparison/comparison.md에도 남긴다.
+실험 작업 트리의 파일은 수정하지 않는다. 상태를 확인할 때는 각 실험의 EXPERIMENT.md와 results/summary/metrics.json을 읽기만 한다.

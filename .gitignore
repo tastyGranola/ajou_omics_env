@@ -11,8 +11,6 @@ figures/
 
 # 병렬 실험 (2일차 2교시) — parallel_lab/setup.sh 가 만든다
 worktrees/
-comparison/*
-!comparison/.gitkeep
 
 # 개인 설정
 CLAUDE.md

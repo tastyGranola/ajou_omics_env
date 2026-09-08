@@ -14,9 +14,12 @@ import sys
 
 
 def tracked(worktree, paths):
-    out = subprocess.run(["git", "-C", worktree, "ls-files", "--", *paths],
+    # -z: NUL-separated, unquoted paths — without it git quotes/octal-escapes
+    # non-ASCII filenames (e.g. 한글) whenever core.quotepath is at its default,
+    # which corrupts every path built from the split-by-line output below.
+    out = subprocess.run(["git", "-C", worktree, "ls-files", "-z", "--", *paths],
                          capture_output=True, text=True, check=True).stdout
-    return [line for line in out.splitlines() if line]
+    return [f for f in out.split("\0") if f]
 
 
 def main(argv):

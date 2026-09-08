@@ -17,7 +17,7 @@ if [ "$HERE" != "$ROOT" ] && [ "${HERE#$ROOT/worktrees/}" != "$HERE" ]; then
 fi
 
 if [ ! -d worktrees ]; then
-  echo "worktrees/ 가 없습니다. 먼저 bash setup.sh 를 실행하세요."
+  echo "worktrees/ 가 없습니다. 먼저 bash tools/setup.sh 를 실행하세요."
   exit 0
 fi
 

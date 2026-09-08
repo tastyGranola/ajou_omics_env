@@ -147,9 +147,10 @@ dc.op.show_resources()                                        # omnipath 에서 
 `dc.op.*` 는 **omnipathdb.org 에 네트워크 요청을 보낸다.** 오프라인이거나 느리면
 미리 받아 둔 캐시를 쓴다.
 
+캐시는 저장소의 `data/genesets/` 에 이미 들어 있다. 무엇이 있는지는 이렇게 본다.
+
 ```bash
-python3 fetch_genesets.py       # data/genesets/ 에 내려받아 캐시
-python3 verify.py               # 무엇이 캐시돼 있는지 확인
+python3 tools/verify.py         # 무엇이 캐시돼 있는지 확인
 ```
 
 ```python

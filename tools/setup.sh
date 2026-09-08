@@ -8,8 +8,8 @@
 #
 #   이 스크립트는 "임의의 아이디어 이름으로 N 개를 미리 깔아 두고 싶을 때" 씁니다.
 #
-#   bash setup.sh                 # 기본 실험 두 개 (plan-execute · stepwise-hitl)
-#   bash setup.sh harmony scvi    # 임의의 아이디어 이름으로 N 개
+#   bash tools/setup.sh                 # 기본 실험 두 개 (plan-execute · stepwise-hitl)
+#   bash tools/setup.sh harmony scvi    # 임의의 아이디어 이름으로 N 개
 #
 # 옵션
 #   --strict-dirty   커밋되지 않은 변경이 있으면 멈추고 확인받는다 (기본은 무시하고 진행)
@@ -67,4 +67,4 @@ for NAME in "${NAMES[@]}"; do
 done
 echo
 echo "각 worktree 에서 claude 를 띄운 뒤 /scrnaseq-plan-execute 또는 /scrnaseq-stepwise-hitl 을 쓰세요."
-echo "진행 상황 확인:  bash status.sh"
+echo "진행 상황 확인:  bash tools/status.sh"

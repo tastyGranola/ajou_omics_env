@@ -2,7 +2,7 @@
 """
 기능 분석 실습 환경 점검 — 시작 전에 한 번 돌리세요.
 
-    python3 verify.py
+    python3 tools/verify.py
 
 패키지 · gene set 캐시 · 입력 데이터를 봅니다.
 분석 결과는 검사하지 않습니다.
@@ -97,7 +97,7 @@ def main() -> int:
         if gsdir.is_dir() else []
     check("gene set 캐시", bool(cached),
           ", ".join(cached) if cached else "비어 있음",
-          "python3 fetch_genesets.py")
+          "저장소에 함께 들어 있어야 합니다 — git status 로 지워지지 않았는지 확인하세요")
 
     for name in cached:
         info = manifest.get(name, {})
@@ -111,8 +111,9 @@ def main() -> int:
 
     missing = [n for n in ("hallmark", "reactome", "progeny", "collectri") if n not in cached]
     if missing:
-        check(f"  아직 안 받은 것: {', '.join(missing)}", False, "",
-              f"python3 fetch_genesets.py {' '.join(missing)}",
+        check(f"  캐시에 없는 것: {', '.join(missing)}", False, "",
+              "data/genesets/ 는 저장소에 함께 들어 있습니다. "
+              "지워졌다면 git checkout -- data/genesets 로 되돌리세요",
               warn_only=True)
 
     # --- 입력 데이터 ----------------------------------------------------

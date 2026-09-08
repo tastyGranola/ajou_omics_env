@@ -3,7 +3,7 @@
 #
 # 이 스크립트가 worktree 세팅의 유일한 출처다.
 #   · scrnaseq-plan-execute · scrnaseq-stepwise-hitl 스킬이 세션 시작 시 직접 호출한다
-#   · setup.sh 는 이름 목록을 받아 이 스크립트를 반복 호출하는 얇은 래퍼다
+#   · tools/setup.sh 는 이름 목록을 받아 이 스크립트를 반복 호출하는 얇은 래퍼다
 #
 #   bash .claude/scripts/worktree_init.sh <이름> [옵션]
 #
@@ -33,12 +33,10 @@ DEFAULT_GOAL="IFN-beta 자극에 대한 PBMC 세포 타입별 반응 차이를 �
 #   이 스크립트 자신도 .claude/ 안에 있으므로 함께 공유된다.
 # data/genesets/ 는 기능 분석의 prior knowledge 캐시다. 실험마다 다른 gene set 을 받으면
 #   "gene set 을 바꿨더니 결과가 달라졌다" 를 말할 수 없으므로 공유한다.
-#   ★ git 에 커밋되어 있어야 링크가 걸린다 (link_shared.py 가 git ls-files 를 쓴다).
+#   ★ git 에 커밋되어 있어야 링크가 걸린다 (tools/link_shared.py 가 git ls-files 를 쓴다).
 # .venv 는 이 목록과 별개다 — .gitignore 대상이라 git ls-files 에 안 잡히므로
-#   link_shared.py 를 못 쓴다. 아래 worktree 생성 이후 별도 블록에서 심볼릭 링크로 건다.
-SHARED=(data/raw data/genesets agent_lab .devcontainer .claude core_markers.xlsx
-        setup.sh status.sh cleanup.sh verify.py fetch_genesets.py link_shared.py
-        metrics_template.json)
+#   tools/link_shared.py 를 못 쓴다. 아래 worktree 생성 이후 별도 블록에서 심볼릭 링크로 건다.
+SHARED=(data/raw data/genesets agent_lab .devcontainer .claude core_markers.xlsx tools)
 
 # --- 인자 ------------------------------------------------------------------
 
@@ -55,7 +53,7 @@ while [ $# -gt 0 ]; do
     -*)             echo "모르는 옵션입니다: $1" >&2; exit 1 ;;
     *)
       if [ -n "$NAME" ]; then
-        echo "실험 이름은 하나만 받습니다 (여러 개는 setup.sh 를 쓰세요): $1" >&2
+        echo "실험 이름은 하나만 받습니다 (여러 개는 tools/setup.sh 를 쓰세요): $1" >&2
         exit 1
       fi
       NAME="$1"; shift ;;
@@ -205,13 +203,13 @@ fi
 #   skip-worktree    공유 경로를 "작업 트리에서 신경 쓰지 마라" 로 표시
 #   checkout-index   나머지만 실제로 꺼낸다
 git -C "$DIR" read-tree HEAD
-python3 "$ROOT/link_shared.py" "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
+python3 "$ROOT/tools/link_shared.py" "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
 git -C "$DIR" checkout-index -a
-python3 "$ROOT/link_shared.py" --link "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
+python3 "$ROOT/tools/link_shared.py" --link "$ROOT" "$ROOT/$DIR" "${SHARED[@]}"
 echo "✓ $DIR   ($NOTE)"
 
 # .venv 는 .gitignore 대상이라 git 이 추적하지 않으므로 SHARED 배열(git 추적 파일 전용
-# link_shared.py)로는 못 건다. 실험마다 scanpy·decoupler 등을 새로 설치하지 않도록
+# tools/link_shared.py)로는 못 건다. 실험마다 scanpy·decoupler 등을 새로 설치하지 않도록
 # main 의 .venv 를 그대로 심볼릭 링크로 공유한다 — 읽기 전용으로 쓴다.
 if [ -d "$ROOT/.venv" ] && [ ! -e "$DIR/.venv" ]; then
   ln -s "../../.venv" "$DIR/.venv"

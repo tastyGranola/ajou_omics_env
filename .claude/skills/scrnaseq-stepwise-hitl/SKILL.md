@@ -14,7 +14,7 @@ worktree 두 개로 나눠 실행), Task/Objective/Dataset/Path 를 두 세션�
 ## 0. 작업 트리 준비
 
 이 스킬도 자기 실험용 git worktree 를 **스스로 만들고 그 안으로 들어간다.** 사용자가
-`setup.sh` 를 미리 실행해 두었을 필요가 없다. 순서는 이렇다.
+`tools/setup.sh` 를 미리 실행해 두었을 필요가 없다. 순서는 이렇다.
 
 ```
 연구 질문(Task) 확보 → worktree 생성·진입 → Dataset·Objective·Path → QC 부터 한 단계씩

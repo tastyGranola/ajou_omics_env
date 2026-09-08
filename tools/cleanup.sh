@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # 병렬 실험 worktree 와 branch 를 정리한다.
 #
-#   bash cleanup.sh          # 무엇이 지워지는지 보여주기만 한다
-#   bash cleanup.sh --yes    # 실제로 지운다
+#   bash tools/cleanup.sh          # 무엇이 지워지는지 보여주기만 한다
+#   bash tools/cleanup.sh --yes    # 실제로 지운다
 #
 # 주의 — worktree 를 지우면 그 안의 results/ figures/ 도 함께 사라집니다.
 #        남기고 싶은 것은 먼저 worktree 밖으로 복사하세요.
@@ -52,7 +52,7 @@ for t in "${TARGETS[@]}"; do
 done
 if [ "$YES" -eq 0 ]; then
   echo
-  echo "실제로 지우려면:  bash cleanup.sh --yes"
+  echo "실제로 지우려면:  bash tools/cleanup.sh --yes"
   exit 0
 fi
 

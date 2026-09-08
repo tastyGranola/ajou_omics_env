@@ -68,11 +68,11 @@ Task 를 먼저 받는 이유는 `EXPERIMENT.md` 의 목표 줄을 실제 연구
 worktree 안으로 들어온 뒤 `.claude/agents/step-validator.md` 가 있는지 확인한다. 없으면
 사용자에게 알리고 계속할지 묻는다 — R4(단계별 검증 호출)를 못 지키게 된다.
 `.claude/` 는 main 을 가리키는 심볼릭 링크이므로, 없다면 그 파일이 **git 에 커밋되지
-않았다는 뜻**이다 (`link_shared.py` 가 `git ls-files` 로 공유 목록을 뽑는다). 같은 이유로
+않았다는 뜻**이다 (`tools/link_shared.py` 가 `git ls-files` 로 공유 목록을 뽑는다). 같은 이유로
 `data/genesets/` 나 참조 스킬이 비어 있을 수도 있으니, 없는 것은 없다고 알린다.
 
 Python 실행 환경도 `.venv/` 로 main 과 공유된다 (worktree_init.sh 가 별도 블록에서 심볼릭
-링크로 건다 — git 추적 대상이 아니라 위 `link_shared.py` 목록에는 없다). 분석 코드는
+링크로 건다 — git 추적 대상이 아니라 위 `tools/link_shared.py` 목록에는 없다). 분석 코드는
 `.venv/bin/python`(또는 그 안의 `pip show scanpy` 등)으로 scanpy·decoupler·celltypist 같은
 패키지가 있는지 먼저 확인하고, 있으면 그 인터프리터로 실행한다. `.venv/` 가 아예 없거나
 패키지가 비어 있으면 그것도 없다고 알린다 — 대신 새 가상환경을 만들어 설치하지 않는다
@@ -145,7 +145,7 @@ R6  annotation·DEG·기능분석 단계의 그림을 그리기 전에 `scrnaseq
     그림 텍스트에 한글 폰트 깨짐이 없게 한다.
 ```
 
-`metrics.json` 키는 `metrics_template.json` 이 저장소 루트에 있으면 그 이름을 그대로 쓴다.
+`metrics.json` 키는 `tools/metrics_template.json` 이 있으면 그 이름을 그대로 쓴다.
 없으면 이 규칙을 계획에서 빼고 사용자에게 알린다.
 
 ## 4. 계획을 세우고 승인받는다

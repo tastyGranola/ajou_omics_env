@@ -303,7 +303,7 @@ IFN-beta 자극이므로 인터페론 반응이 상위에 있어야 한다.
 
 ### 마무리
 
-- `metrics.json` 이 저장소 루트 `metrics_template.json` 의 키 이름을 지켰는가
+- `metrics.json` 이 `tools/metrics_template.json` 의 키 이름을 지켰는가
 - 기능 분석을 했다면 `functional` 블록의 `readout` · `prior_knowledge` · `method` ·
   `positive_control` 이 채워졌는가. `versions` 가 실측값인가
 - 리포트에 **방법·QC 부록**이 있는가 — 임계값 파라미터 표, 패키지 버전,

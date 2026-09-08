@@ -1,3 +1,4 @@
+```
 single_cell_project/
 ├── data/
 │   ├── raw/
@@ -30,11 +31,13 @@ single_cell_project/
 ├── worktrees/
 │
 └── README.md
+```
 
 이 디렉토리 구조는 프로젝트의 기본적인 조직 원칙을 나타낸다. 파일명, 파일 개수, 분석 스크립트나 노트북의 분할 방식은 고정하지 않는다.
 
 분석 목적과 복잡도에 따라 필요한 파일을 자유롭게 생성·통합·분리할 수 있으며, 사용하지 않는 디렉토리를 형식적으로 채울 필요는 없다.
 
+```
 data/raw/: 원본 데이터. 가능하면 수정하지 않는다.
 data/genesets/: 기능 분석용 prior knowledge(gene set·footprint) 캐시. 공용 입력이므로 읽기만 한다.
 data/processed/: QC, preprocessing, annotation 등 분석 과정에서 생성되는 재사용 가능한 중간 데이터.
@@ -52,6 +55,7 @@ config/: 분석 파라미터나 설정 파일이 필요한 경우 사용한다.
 EXPERIMENT.md: 이 작업 트리가 하나의 실험일 때만 존재한다. 실험의 아이디어, 진행 방식, 결정 로그를 담는다.
 worktrees/: 병렬 실험용 git worktree가 놓이는 자리. main 작업 트리에만 존재하며 git으로 추적하지 않는다.
 README.md: 데이터, 분석 목적, 주요 분석 과정과 결과를 설명한다.
+```
 
 새로운 분석 단계가 필요하면 기존 구조에 억지로 맞추지 말고 적절한 디렉토리나 하위 디렉토리를 추가할 수 있다.
 
@@ -69,14 +73,13 @@ Report 생성 때문에 분석 세션을 종료하거나 사용자의 추가 입
 
 data/genesets/는 기능 분석에 쓰는 prior knowledge(gene set·footprint) 캐시다. 저장소에 함께 들어 있으므로 읽기만 하고 쓰지 않는다. 분석 코드 안에서 매번 원격으로 내려받지 않는다 — 원격 자원은 조용히 바뀌고, 그러면 같은 코드가 다른 결과를 낸다.
 
-이 환경의 decoupler는 2.x다. dc.mt.* / dc.op.* / dc.pp.* / dc.pl.* / dc.tl.* 를 쓴다. dc.run_ulm, dc.get_progeny, dc.get_pseudobulk 같은 1.x 함수는 존재하지 않는다. 기능 분석 코드를 작성하기 전에 decoupler-cheatsheet 스킬을 먼저 읽는다.
+이 환경의 decoupler는 2.x다. `dc.mt.*` / `dc.op.*` / `dc.pp.*` / `dc.pl.*` / `dc.tl.*` 를 쓴다. dc.run_ulm, dc.get_progeny, dc.get_pseudobulk 같은 1.x 함수는 존재하지 않는다. 기능 분석 코드를 작성하기 전에 decoupler-cheatsheet 스킬을 먼저 읽는다.
 
 data/core_markers.xlsx는 celltype별 핵심 marker 목록을 담고 있는 참조 파일이다. 사용자의 명시적인 지시가 있거나 annotation 결과를 검증하는 단계가 아닌 이상 이 파일을 사용하지 않는다.
 
 skill을 작성하거나 분석 결과에 대한 근거를 설명할 때는 항상 한글로 작성한다.
 
 코드를 작성해야 할 때는 scripts/ 안에 script 파일로 작성한다. 사용자가 명시적으로 요청하지 않는 한 노트북(.ipynb)을 새로 만들지 않는다.
-
 
 ## 병렬 실험 (git worktree)
 

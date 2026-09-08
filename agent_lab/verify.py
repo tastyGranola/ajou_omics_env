@@ -108,7 +108,7 @@ def main() -> int:
             print("  •", f)
         print()
         return 1
-    print("\033[32m준비 완료.  agent_lab/LAB.md 의 1단계로 가세요.\033[0m\n")
+    print("\033[32m준비 완료.  README_agentlab.md 의 1단계로 가세요.\033[0m\n")
     return 0
 
 

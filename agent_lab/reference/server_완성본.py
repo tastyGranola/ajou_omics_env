@@ -189,7 +189,7 @@ def qc_check(run_id: str) -> dict:
 #  도구 ④  차등발현
 #
 #  실습 2단계: 아래 함수에 "QC 통과한 run 만 받는다" 게이트를 직접 넣습니다.
-#  (qc_check 이 run["qc_passed"] 에 합격 여부를 기록해 둡니다. LAB.md 2단계 참고)
+#  (qc_check 이 run["qc_passed"] 에 합격 여부를 기록해 둡니다. README_agentlab.md 2단계 참고)
 # ────────────────────────────────────────────────────────────
 
 @mcp.tool()

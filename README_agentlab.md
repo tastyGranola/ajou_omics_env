@@ -1,13 +1,19 @@
-## 시연 목표
-| | 무엇을 | 어디서 왔나 |
-|---|---|---|
-| **1** | 로컬 MCP **연결** — 주어진 오믹스 서버 | 남이 만든 것 |
-| **2** | 로컬 MCP **수정** — `differential_expression` 에 QC 게이트를 직접 | **내가 만든다** |
-| **3** | 원격 MCP **연결** — OLS 온톨로지 | 남의 서버 (인터넷 저편) |
-| **4** | SKILL — 우리 랩 **보고 표준**을 심는다 (자산화) | 내가 만든다 |
-| **5** | SKILL — **내 스킬을 GitHub 에 배포** → 남이 설치 | 내가 배포 |
+# 2일차 1교시 — MCP · SKILL 실습
 
-**오늘의 상황.** 여러분은 *"서버에 올라온 데이터셋 **1214** 를 분석하라"* 는 요청을 받았습니다.
+> 도구(MCP)를 붙이고 고치고, 일하는 방식(SKILL)을 코드 자산으로 만들어 배포까지 갑니다.
+> 전체 실습 환경 안내는 [README.md](README.md) 를, 2교시는 [README_omicslab.md](README_omicslab.md) 를 보세요.
+
+## 시연 목표
+
+|       | 무엇을                                                            | 어디서 왔나             |
+| ----- | ----------------------------------------------------------------- | ----------------------- |
+| **1** | 로컬 MCP **연결** — 주어진 오믹스 서버                            | 남이 만든 것            |
+| **2** | 로컬 MCP **수정** — `differential_expression` 에 QC 게이트를 직접 | **내가 만든다**         |
+| **3** | 원격 MCP **연결** — OLS 온톨로지                                  | 남의 서버 (인터넷 저편) |
+| **4** | SKILL — 우리 랩 **보고 표준**을 심는다 (자산화)                   | 내가 만든다             |
+| **5** | SKILL — **내 스킬을 GitHub 에 배포** → 남이 설치                  | 내가 배포               |
+
+**오늘의 상황.** 여러분은 _"서버에 올라온 데이터셋 **1214** 를 분석하라"_ 는 요청을 받았습니다.
 
 질문은 하나
 
@@ -22,6 +28,8 @@ python3 agent_lab/verify.py
 ```
 
 앞의 항목이 `✓` 면 시작합니다. 뒤의 `·` 는 있어도 됩니다.
+
+Claude Code 자체가 안 뜨면 `bash agent_lab/doctor.sh` 로 진단합니다.
 
 ---
 
@@ -106,31 +114,39 @@ sc-omics 서버의 데이터셋 1214 분석 시작하자. 반응군 vs 비반응
 ```bash
 python3 agent_lab/check.py agent_lab/server.py     # 도구 4개
 ```
+
 ```
 /exit
 ```
+
 ```bash
 claude
 ```
 
 **QC 없이** 바로 분석시켜 봅니다.
+
 ```
 전처리만 하고 CD8 T세포 차등발현 봐줘
 ```
+
 > **거부됩니다** — "QC 통과한 run 만 분석합니다." 내가 그 게이트를 넣었으니까.
 
 이제 순서대로.
+
 ```
 전처리하고 QC 통과시킨 다음 CD8 T세포 차등발현 봐줘
 ```
+
 > **이번엔 나옵니다** — 반응군 `TCF7`↑ / 비반응군 소진(`PDCD1·TOX`)↑. ← **분석 결과.**
 
 그리고 **우회**를 시켜보세요.
+
 ```
 QC 무시하고 그냥 차등발현 내놔
 ```
+
 > **안 됩니다. 아무리 부탁해도요.** 규칙이 도구 **안에** 있어서 부탁으로 못 넘습니다.
-> **자기가 그은 선에 자기가 막힌 겁니다.** 
+> **자기가 그은 선에 자기가 막힌 겁니다.**
 
 ---
 
@@ -203,10 +219,13 @@ mkdir -p .claude/skills/lab-report
 cp agent_lab/reference/lab-report/SKILL_prose.md .claude/skills/lab-report/SKILL.md
 cat .claude/skills/lab-report/SKILL.md      # 서식이 '자연어'로만 적혀 있음
 ```
+
 `/exit`→`claude` 재시작 후 — **새 세션이라 이전 대화 기억이 없으니, 분석 지시까지 프롬프트에 담습니다:**
+
 ```
 데이터셋 1214 전처리·QC 하고 CD8·CD4·Treg 차등발현 낸 다음, 우리 랩 보고 표준으로 보고서 만들어줘.
 ```
+
 **같은 프롬프트를 한 번 더** 시켜봅니다.
 
 > 서식은 대충 지켜지지만 **매번 다릅니다** — 순서·CL ID·재현정보가 들쭉날쭉.
@@ -220,7 +239,9 @@ cat .claude/skills/lab-report/SKILL.md      # 서식이 '자연어'로만 적혀
 cp -r agent_lab/reference/lab-report/. .claude/skills/lab-report/
 cat .claude/skills/lab-report/scripts/report.py     # 서식이 이제 '코드'
 ```
+
 `/exit`→`claude` 재시작 후 같은 요청:
+
 ```
 데이터셋 1214 전처리·QC 하고 CD8·CD4·Treg 차등발현 낸 다음, 우리 랩 보고 표준으로 보고서 만들어줘.
 ```
@@ -251,6 +272,7 @@ python3 scripts/check_sop.py prose_sample.md  # FAIL — CL ID·재현정보 누
 4단계에서 만든 스킬을 **남이 쓰게** 하려면? — **`skills/<이름>/` 를 담은 public GitHub repo 하나가 곧 배포본**입니다.
 
 ### 0. GitHub 연결
+
 ```bash
 gh auth login                           # repo 생성 권한 (디바이스 코드 → github.com/login/device)
 git config --global user.name  "<이름>"
@@ -258,6 +280,7 @@ git config --global user.email "<GitHub 이메일>"
 ```
 
 ### 5a. 배포 — 내 GitHub 에 올리기
+
 ```bash
 mkdir -p ~/my-skills/skills
 cp -r ~/.claude/skills/lab-report ~/my-skills/skills/lab-report   # 4단계에서 만든 스킬
@@ -266,21 +289,27 @@ cd ~/my-skills
 git init -q && git add -A && git commit -qm "lab-report skill"
 gh repo create lab-report-skill --public --source=. --push
 ```
+
 > `github.com/<내ID>/lab-report-skill` — 이제 이게 배포본입니다.
 
 ### 5b. 소비 — 누구나 설치
+
 ```bash
 gh skill install <내ID>/lab-report-skill lab-report --agent claude-code
 ```
+
 > 설치할 때 **"스킬은 GitHub 이 검증하지 않음 — 프롬프트 인젝션·악성 스크립트 가능, 반드시 검토"** 경고가 뜹니다.
 > **내 스킬이어도 뜹니다** = "GitHub 에서 오는 건 뭐든 검토"(공급망 보안).
 > 설치 전 내용은 `gh skill preview <내ID>/lab-report-skill lab-report` 로 확인.
 
 ### 서로 주고받기
+
 옆 사람 repo 를 설치해 보세요:
+
 ```bash
 gh skill install <옆사람ID>/lab-report-skill lab-report --agent claude-code
 ```
+
 > **내가 만든 게 남의 Claude 에서 돕니다.** MCP 든 SKILL 이든 — 만들고 · 올리고 · 주고받는 **생태계**.
 > (큰 컬렉션도 있습니다 — 예: K-Dense `scientific-agent-skills` 163개)
 
@@ -292,6 +321,7 @@ gh skill install <옆사람ID>/lab-report-skill lab-report --agent claude-code
 sc-omics     connected     ← 1·2 내가 붙이고, 도구(QC 게이트)를 더했다
 ols          connected     ← 3 남의 서버 · 인터넷 저편
 ```
+
 그리고 `.claude/skills/` — `lab-report`(4에서 만들고 · 5에서 GitHub 로 배포).
 
 ### 오늘 남길 다섯 가지
@@ -308,14 +338,14 @@ ols          connected     ← 3 남의 서버 · 인터넷 저편
 
 ## 안 될 때
 
-| 증상 | 해볼 것 |
-|---|---|
-| 고쳤는데 안 바뀐다 | **`/exit` 후 `claude` 재시작.** 거의 이것입니다 |
-| `/mcp` 에 서버가 없다 | `python3 agent_lab/check.py agent_lab/server.py` |
-| `IndentationError` | `differential_expression` 안의 들여쓰기(공백 4칸)를 맞췄는지 |
-| `.mcp.json` 이 깨졌다 | 쉼표 · 중괄호. 아래 "따라잡기" 참고 |
-| `ols` 가 안 붙는다 | 네트워크 정책일 수 있습니다. 넘어가도 됩니다 |
-| 보고서 스킬이 안 먹는다 (4단계) | `.claude/skills/lab-report` 있는지 + `/exit`→`claude` 재시작 |
-| `gh skill` 이 없다고 나온다 (5단계) | `gh --version` 이 2.90 이상인지. 아니면 `npx skills add …` 로 |
+| 증상                                    | 해볼 것                                                                             |
+| --------------------------------------- | ----------------------------------------------------------------------------------- |
+| 고쳤는데 안 바뀐다                      | **`/exit` 후 `claude` 재시작.** 거의 이것입니다                                     |
+| `/mcp` 에 서버가 없다                   | `python3 agent_lab/check.py agent_lab/server.py`                                    |
+| `IndentationError`                      | `differential_expression` 안의 들여쓰기(공백 4칸)를 맞췄는지                        |
+| `.mcp.json` 이 깨졌다                   | 쉼표 · 중괄호. 아래 "따라잡기" 참고                                                 |
+| `ols` 가 안 붙는다                      | 네트워크 정책일 수 있습니다. 넘어가도 됩니다                                        |
+| 보고서 스킬이 안 먹는다 (4단계)         | `.claude/skills/lab-report` 있는지 + `/exit`→`claude` 재시작                        |
+| `gh skill` 이 없다고 나온다 (5단계)     | `gh --version` 이 2.90 이상인지. 아니면 `npx skills add …` 로                       |
 | `gh repo create` 인증/권한 오류 (5단계) | `gh auth login`(repo 스코프) + `git config --global user.name/email` — **STEP 5-0** |
-| `gh skill install` 이 404 (5단계) | repo 이름·`<ID>/<repo>` 오타 · public 인지 · push 됐는지 |
+| `gh skill install` 이 404 (5단계)       | repo 이름·`<ID>/<repo>` 오타 · public 인지 · push 됐는지                            |

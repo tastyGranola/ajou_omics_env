@@ -222,5 +222,5 @@ echo "새 터미널을 열고 다음을 실행하세요:"
 echo
 echo "    claude"
 echo
-echo "MCP · SKILL 실습(2일차 1교시)은 agent_lab/LAB.md 를 여세요."
+echo "MCP · SKILL 실습(2일차 1교시)은 README_agentlab.md 를 여세요."
 echo

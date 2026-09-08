@@ -52,20 +52,6 @@ python3 tools/verify.py    # 패키지 · gene set 캐시 · 입력 데이터 �
 > (원 저자가 미토콘드리아 리드를 제외함). 따라서 미토콘드리아 비율 기반 QC 는 적용할 수 없고,
 > `total_counts` 와 `n_genes` 로 QC 를 진행합니다.
 
-### 데이터 재생성
-
-```bash
-python scripts/prepare_data.py                   # 기본값: 12,000 세포, 세포 타입 주석 제외
-python scripts/prepare_data.py --n-cells 24000   # 다운샘플 없이 singlet 전체 (약 36 MB)
-python scripts/prepare_data.py --with-cell-type  # 강사용: 원 저자 세포 타입 주석 포함본
-```
-
-`--with-cell-type` 은 `gse96583_ifnb_with_celltype.h5ad` 로 따로 저장되며 git 에 포함되지
-않습니다. 수강생 주석 결과를 원 논문과 비교할 때 사용하세요.
-
-GEO 원본 파일도 `data/raw/` 에 함께 포함되어 있어, 네트워크 다운로드 없이 전처리 과정을
-그대로 재현할 수 있습니다. (스크립트는 파일이 이미 있으면 다운로드를 건너뜁니다)
-
 | 파일                                                  | 내용                                                                       |
 | ----------------------------------------------------- | -------------------------------------------------------------------------- |
 | `GSM2560248_2.1.mtx.gz`, `GSM2560248_barcodes.tsv.gz` | 대조군 count matrix / 바코드                                               |
@@ -104,49 +90,42 @@ GEO 원본 파일도 `data/raw/` 에 함께 포함되어 있어, 네트워크 �
 | `scrnaseq-plan-execute`  | 계획을 먼저 세우고 승인 후 끝까지 자율 실행 |
 | `scrnaseq-stepwise-hitl` | 한 단계씩 가고 갈림길마다 사람에게 물음     |
 
-| 곁들여 쓰는 것                  | 하는 일                                     |
-| ------------------------------- | ------------------------------------------- |
-| `decoupler-cheatsheet`          | decoupler 2.x API 대응표                    |
-| `scrnaseq-visualization-spec`   | 단계별로 반드시 그려야 하는 그림 규격       |
-| `.claude/agents/step-validator` | 끝난 단계를 정확성 · 완결성으로 채점        |
+| 곁들여 쓰는 것                  | 하는 일                               |
+| ------------------------------- | ------------------------------------- |
+| `decoupler-cheatsheet`          | decoupler 2.x API 대응표              |
+| `scrnaseq-visualization-spec`   | 단계별로 반드시 그려야 하는 그림 규격 |
+| `.claude/agents/step-validator` | 끝난 단계를 정확성 · 완결성으로 채점  |
 
 ## 병렬 실험 — 같은 질문을 서로 다른 진행 방식으로
 
 한 연구 질문을 두고 **서로 다른 진행 방식을 동시에** 돌려 볼 수 있습니다.
-`git worktree` 로 branch 마다 작업 폴더를 따로 만들어, 여러 Claude 세션이 같은
-저장소에서 서로 부딪히지 않고 나란히 분석합니다.
-
-**worktree 를 직접 만들지 않습니다.** 스킬이 자기 실험용 worktree 를 만들고 그 안으로
-들어갑니다. 터미널 두 개를 열고 각각 **저장소 루트**에서 `claude` 를 띄운 뒤, 한쪽에서
-`/scrnaseq-plan-execute` 를, 다른 쪽에서 `/scrnaseq-stepwise-hitl` 을 부르면 됩니다.
+터미널 두 개를 열고 각각 **저장소 루트**에서 `claude` 를 띄운 뒤, 한쪽에서
+`/scrnaseq-plan-execute` 를, 다른 쪽에서 `/scrnaseq-stepwise-hitl` 을 부릅니다.
+실험마다 작업 공간을 따로 만드는 일은 스킬이 알아서 합니다.
 
 ```bash
-git add -A && git commit -m "병렬 실험 출발점"   # worktree 는 마지막 커밋에서 갈라집니다
-claude                                          # 그 다음 /scrnaseq-plan-execute
+git add -A && git commit -m "병렬 실험 출발점"   # 실험은 마지막 커밋에서 갈라집니다
+claude
 ```
 
-스킬은 연구 질문을 먼저 받고 → `worktrees/<실험이름>/` 을 만들고 → 그 안으로 세션을
-옮긴 뒤 분석을 시작합니다. 커밋되지 않은 변경이 있으면 지금 커밋할지 마지막 커밋에서
-갈라질지 물어봅니다.
+스킬을 부르면 연구 질문을 물어봅니다. 두 터미널에 **같은 데이터, 같은 질문**을 주고
+**진행 방식만 다르게** 적습니다.
 
-```bash
-bash tools/status.sh     # 실험 상태를 한 표로
-bash tools/cleanup.sh    # 정리
-```
+자율 실행 쪽 (`/scrnaseq-plan-execute`):
 
-공용 입력(`data/raw/`, `data/genesets/`, `agent_lab/`, `data/core_markers.xlsx`, `.claude/`, `tools/`)은
-복사하지 않고 main 을 가리키는 심볼릭 링크로 걸립니다. 실험이 **만드는** 것(`scripts/`,
-`data/processed/`, `results/`, `figures/`)만 worktree 마다 따로 생깁니다 — worktree 하나당 약 17MB.
-무엇을 공유하고 무엇을 따로 둘지는 `.claude/scripts/worktree_init.sh` 의 `SHARED` 목록에
-한 곳으로 모여 있습니다.
+> IFN-beta 자극에 대해 다양한 면역세포들이 어떻게 반응하는지를 연구하고 싶어.
+> 데이터는 data 디렉토리 안에 있어. 연구 계획을 세우고 그 이후에는 네가 알아서
+> 자발적으로 실행하도록해.
 
-시험해 보고 싶은 아이디어가 셋 이상이면 `tools/setup.sh` 로 미리 깔아 둘 수 있습니다.
-이때는 만들어진 worktree 에서 각각 `claude` 를 띄웁니다.
+단계별 검토 쪽 (`/scrnaseq-stepwise-hitl`):
 
-```bash
-bash tools/setup.sh harmony-integration scvi-integration no-integration
-cd worktrees/harmony-integration && claude
-```
+> IFN-beta 자극에 대해 다양한 면역세포들이 어떻게 반응하는지를 연구하고 싶어.
+> 데이터는 data 디렉토리 안에 있어. 연구 계획을 세우고 실행하되 주요 단계가 끝날
+> 때마다 나의 검토를 받았으면 해.
+
+두 세션은 서로의 결과를 건드리지 않고 나란히 진행됩니다. 공용 입력 데이터는
+그대로 함께 쓰고, 각 실험이 만드는 스크립트 · 중간 데이터 · 결과 · 그림만
+실험별로 따로 쌓입니다. 끝난 뒤 두 쪽의 판단이 어디서 갈렸는지 비교해 보세요.
 
 ## 참고 문헌
 

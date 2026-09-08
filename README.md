@@ -46,7 +46,7 @@ data/raw/               GEO 원본 파일 (mtx, barcodes, genes, 세포 주석)
 data/genesets/          기능 분석용 gene set · footprint 캐시 (저장소에 함께 들어 있습니다)
 data/processed/         전처리된 실습용 h5ad
 scripts/prepare_data.py 원본 데이터 → 실습용 데이터 변환 스크립트
-core_markers.xlsx       celltype 별 핵심 marker 참조 — annotation 검증용
+data/core_markers.xlsx  celltype 별 핵심 marker 참조 — annotation 검증용
 
 .claude/skills/         분석 스킬 (scrnaseq-plan-execute 등)
 .claude/agents/         step-validator — 단계별 채점 서브에이전트

@@ -134,7 +134,7 @@ bash tools/status.sh     # 실험 상태를 한 표로
 bash tools/cleanup.sh    # 정리
 ```
 
-공용 입력(`data/raw/`, `data/genesets/`, `agent_lab/`, `core_markers.xlsx`, `.claude/`, `tools/`)은
+공용 입력(`data/raw/`, `data/genesets/`, `agent_lab/`, `data/core_markers.xlsx`, `.claude/`, `tools/`)은
 복사하지 않고 main 을 가리키는 심볼릭 링크로 걸립니다. 실험이 **만드는** 것(`scripts/`,
 `data/processed/`, `results/`, `figures/`)만 worktree 마다 따로 생깁니다 — worktree 하나당 약 17MB.
 무엇을 공유하고 무엇을 따로 둘지는 `.claude/scripts/worktree_init.sh` 의 `SHARED` 목록에

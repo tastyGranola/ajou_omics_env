@@ -158,7 +158,7 @@ annotation·DEG 단계의 그림 규격(celltypist 사용, dotplot 구성, cellt
 - 세포 단위 예측을 그대로 쓰지 않고 cluster 단위 다수결(majority voting)로 배정했는가.
   같은 클러스터 안에서 라벨이 흔들렸다면 그 사실이 기록되어 있는가
 - 세포 타입 주장마다 marker 근거가 붙어 있는가
-- `core_markers.xlsx` 같은 참조 파일이 있으면 celltypist 라벨과 대조했는가.
+- `data/core_markers.xlsx` 같은 참조 파일이 있으면 celltypist 라벨과 대조했는가.
   **불일치 항목을 빼놓지 않았는가.** 대조 결과로 celltypist 예측을 덮어썼다면 근거가
   있는가
 - 같은 marker 를 서로 다른 타입의 근거로 중복 사용하지 않았는가

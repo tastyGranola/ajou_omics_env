@@ -75,7 +75,7 @@ marker positive/negative 점수 최댓값 할당 방식 대신 **celltypist** �
   cluster 단위로 다수결(majority voting) 라벨을 cluster 에 배정한다. 세포 단위 예측을
   그대로 쓰지 않는다 — 같은 클러스터 안에서 라벨이 흔들리면 그 자체가 클러스터링/해상도
   문제일 수 있으므로 별도로 기록한다.
-- `core_markers.xlsx` 같은 참조 마커 파일이 있으면 celltypist 라벨과 **대조 검증**에
+- `data/core_markers.xlsx` 같은 참조 마커 파일이 있으면 celltypist 라벨과 **대조 검증**에
   쓴다(2번 dotplot 이 이 역할을 한다). celltypist 예측을 이 파일로 덮어쓰지 않는다 —
   불일치가 있으면 근거와 함께 기록하고 어느 쪽을 채택했는지 남긴다.
 - celltypist 모델이 이 조직/종에 없거나 부적절하면(예: 비인간 종, 흔치 않은 조직)
@@ -120,7 +120,7 @@ sc.pl.umap(adata, color="celltype_broad", ax=axes[1], show=False,
 
 annotation 이 끝나면 cluster 별로 marker 발현이 실제로 분리되는지 **dotplot 으로 확인한다.**
 
-1. **1차 dotplot**: 이 조직에서 흔히 쓰는 전체 marker 세트(`core_markers.xlsx` 가 있으면
+1. **1차 dotplot**: 이 조직에서 흔히 쓰는 전체 marker 세트(`data/core_markers.xlsx` 가 있으면
    그 유전자들, 없으면 celltypist 모델의 대표 마커)로 `sc.pl.dotplot(groupby="leiden", ...)`
    를 그린다.
 
